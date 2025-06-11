@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "266017925446",
+    "project_id": "friend-team11",
+    "storage_bucket": "friend-team11.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:266017925446:android:0de8b46e03f2d180601d47",
+        "android_client_info": {
+          "package_name": "com.team11.friendconnection"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "266017925446-di03svkvsqojbjgbv7q5ll5q7kgob65l.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.team11.friendconnection",
+            "certificate_hash": "993ccfd96e9e860fa512bea0e1bc423fff7f0ec7"
+          }
+        },
+        {
+          "client_id": "266017925446-u2pcs8mfomg1mgqjte3taprv5qe76b64.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCieLqzlRujrekVOnoUj9lfEqghpB97IHc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "266017925446-u2pcs8mfomg1mgqjte3taprv5qe76b64.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "266017925446-etdvsflt21n3rs5sbvhcf9d5m7bk7afh.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.team11.friendconnection"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
