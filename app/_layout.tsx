@@ -1,19 +1,19 @@
-// import { useFonts } from "expo-font";
+//_layout.tsx
+import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
-// import { StatusBar } from "expo-status-bar";
+import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 
 export default function RootLayout() {
-  // const [loaded] = useFonts({
-  //   SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
-  // });
+  const [loaded] = useFonts({
+    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
+  });
 
-  // if (!loaded) return null;
-  return <Stack />;
-  // return (
-  //   <>
-  //     <Stack />
-  //     <StatusBar style="auto" />
-  //   </>
-  // );
+  if (!loaded) return null;
+  return (
+    <>
+      <Stack />
+      <StatusBar style="auto" />
+    </>
+  );
 }
