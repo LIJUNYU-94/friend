@@ -12,6 +12,7 @@ export default function RootLayout() {
   if (!loaded) return null;
   return (
     <>
+      {/* <Stack screenOptions={{ headerShown: false }} /> */}
       <Stack />
       <StatusBar style="auto" />
     </>
