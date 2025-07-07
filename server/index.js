@@ -6,7 +6,10 @@ const admin = require("firebase-admin");
 const app = express();
 app.use(cors());
 app.use(express.json());
-
+if (!process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+  console.error("❌ 環境変数が未設定です！");
+  process.exit(1);
+}
 // Firebase Admin SDK の初期化
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
 admin.initializeApp({
@@ -21,7 +24,7 @@ const timers = new Map();
 const generateRandomAuthword = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
-
+console.log("繋いてる");
 // POSTエンドポイント（React Nativeから叩く）
 app.post("/start-authword-timer", async (req, res) => {
   console.log("🔥 POST受信:", req.body);
@@ -56,7 +59,7 @@ app.post("/start-authword-timer", async (req, res) => {
 });
 
 // サーバー起動
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`🚀 Server ready at http://localhost:${PORT}`);
 });
