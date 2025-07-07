@@ -11,15 +11,7 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
-const requiredFields = [
-  "birthday",
-  "hobby",
-  "mbti",
-  "icon",
-  "bloodType",
-  "zodiac",
-  "hometown",
-];
+const requiredFields = ["connections"];
 
 async function main() {
   const membersRef = db

@@ -1,5 +1,7 @@
+// add-connections-empty.js
+
 const admin = require("firebase-admin");
-const serviceAccount = require("./serviceAccountKey.json");
+const serviceAccount = require("./serviceAccountKey.json"); // Firebaseの秘密鍵パス
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -7,24 +9,25 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
-const setAllRolesToMember = async () => {
-  const snapshot = await db.collection("users").get();
+const ORG_ID = "orgs_aw24";
 
-  for (const doc of snapshot.docs) {
-    try {
-      await db.collection("users").doc(doc.id).set(
-        {
-          selectedOrg: "",
-        },
-        { merge: true }
-      );
-      console.log(`✅ 追加: ${doc.id}`);
-    } catch (err) {
-      console.warn(`❌ 失敗: ${doc.id}`, err.message);
-    }
-  }
+async function setEmptyConnectionsToAllMembers() {
+  const membersRef = db.collection("orgs").doc(ORG_ID).collection("members");
+  const snapshot = await membersRef.get();
+  const batch = db.batch();
 
-  console.log("🎉 全ユーザーに追加完了！");
-};
+  snapshot.forEach((doc) => {
+    const randomCode = Math.floor(100000 + Math.random() * 900000).toString(); // 6桁のランダム数字
+    const ref = doc.ref;
+    batch.update(ref, {
+      authword: randomCode,
+    });
+  });
 
-setAllRolesToMember();
+  await batch.commit();
+  console.log("✅ 全メンバーに authword, を設定しました");
+}
+
+setEmptyConnectionsToAllMembers().catch((err) => {
+  console.error("🔥 エラー:", err);
+});

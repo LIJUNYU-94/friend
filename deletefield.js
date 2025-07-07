@@ -1,39 +1,33 @@
-// clear_user_fields.js
-// users コレクションの全ドキュメントから
-// hobby / icon / mbti / role を削除する
+// delete-connections.js
 
-import admin from "firebase-admin";
-import { FieldValue } from "firebase-admin/firestore";
-import { readFileSync } from "fs";
+const admin = require("firebase-admin");
+const serviceAccount = require("./serviceAccountKey.json"); // あなたの秘密鍵ファイル
 
-const sa = JSON.parse(readFileSync("./serviceAccountKey.json", "utf8"));
 admin.initializeApp({
-  credential: admin.credential.cert(sa),
-  projectId: sa.project_id,
+  credential: admin.credential.cert(serviceAccount),
 });
 
 const db = admin.firestore();
 
-async function main() {
-  const snap = await db.collection("users").get();
-  let batch = db.batch();
-  let count = 0;
+const ORG_ID = "orgs_aw24";
 
-  snap.forEach((doc) => {
-    batch.update(doc.ref, {
-      hometown: FieldValue.delete(),
+async function deleteConnectionsFromAllMembers() {
+  const membersRef = db.collection("orgs").doc(ORG_ID).collection("members");
+  const snapshot = await membersRef.get();
+
+  const batch = db.batch();
+
+  snapshot.forEach((doc) => {
+    const ref = doc.ref;
+    batch.update(ref, {
+      connections: admin.firestore.FieldValue.delete(),
     });
-    count++;
-
-    // Firestore batch 上限 500 対策
-    if (count % 500 === 0) {
-      batch.commit();
-      batch = db.batch();
-    }
   });
 
-  if (count % 500 !== 0) await batch.commit();
-  console.log(`✅ ${count} docs updated`);
+  await batch.commit();
+  console.log("✅ 全メンバーから connections フィールドを削除しました");
 }
 
-main().catch(console.error);
+deleteConnectionsFromAllMembers().catch((err) => {
+  console.error("🔥 エラー:", err);
+});

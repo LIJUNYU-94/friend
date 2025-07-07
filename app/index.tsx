@@ -158,9 +158,11 @@ export default function App() {
           ) : role === "pending_admin" ? (
             <Text>審査中画面です</Text>
           ) : role === "member" ? (
-            <Text>
-              メンバー画面です（組織選択リストー前回選択に進める、一個しかなかったらパス）
-            </Text>
+            <AdminTop
+              userIcon={userIcon ?? undefined}
+              role={role}
+              userName={userName ?? undefined}
+            />
           ) : role === "none" ? (
             <>
               <Text>{userName}さん、未所属</Text>
