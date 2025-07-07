@@ -24,6 +24,7 @@ const generateRandomAuthword = () => {
 
 // POSTエンドポイント（React Nativeから叩く）
 app.post("/start-authword-timer", async (req, res) => {
+  console.log("🔥 POST受信:", req.body);
   const { orgId, email } = req.body;
   if (!orgId || !email)
     return res.status(400).json({ error: "Missing fields" });

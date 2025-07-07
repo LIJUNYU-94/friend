@@ -51,16 +51,20 @@ export default function BeFriend({
   };
   const handleSuccess = async () => {
     try {
-      await fetch("https://your-railway-url/start-authword-timer", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          orgId,
-          email,
-        }),
-      });
+      await fetch(
+        "https://friend-production.up.railway.app/start-authword-timer",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            orgId,
+            email,
+          }),
+        }
+      );
+      console.log("認証コード5分後に変わる！");
     } catch (err) {
       console.error("❌ タイマー送信失敗:", err);
     }
