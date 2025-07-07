@@ -8,7 +8,7 @@ app.use(cors());
 app.use(express.json());
 
 // Firebase Admin SDK の初期化
-const serviceAccount = require("./serviceAccountKey.json");
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
