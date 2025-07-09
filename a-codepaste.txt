@@ -1,0 +1,16 @@
+{ id: "", name: "" },
+{ id: "", name: "" },
+{ id: "", name: "" },
+{ id: "", name: "" },
+
+import { doc, updateDoc, arrayUnion,arrayRemove } from "firebase/firestore";
+追加：
+await updateDoc(doc(db, "orgs", orgId), {
+  hobbys: arrayUnion("アニメ"),
+});
+削除：
+await updateDoc(doc(db, "orgs", orgId), {
+  hobbys: arrayRemove("アニメ"),
+});
+
+

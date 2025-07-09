@@ -57,6 +57,12 @@ const breakName = (name: string) => {
 
   return name; // それ以外はそのまま
 };
+const sortOptions = [
+  { label: "番号順", value: "num" },
+  { label: "お気に入り", value: "star" },
+  { label: "繋がり", value: "connect" },
+  { label: "完成度順", value: "process" },
+];
 //
 const orgId = "orgs_aw24"; // ★ 固定ならここ、動的なら props で受け取る　　　複数の組織になる場合に修正すべきところ2
 export default function AdminTop({ userIcon, role, userName }: Props) {
@@ -72,14 +78,16 @@ export default function AdminTop({ userIcon, role, userName }: Props) {
   const [org, setOrg] = useState("");
   const orgRef = doc(db, "orgs", orgId);
   const encodeKey = (email: string): string => email.replace(/\./g, "__");
-  const decodeKey = (key: string) => key.replace(/__/g, ".");
   getDoc(orgRef).then((docSnap) => {
     if (docSnap.exists()) {
       const data = docSnap.data();
       setOrg(data.name);
     }
   });
-
+  //useStateで並び順管理
+  const [sortOrder, setSortOrder] = useState<
+    "num" | "star" | "connect" | "process" //番号順、星？、繋がり？完成度？
+  >("connect");
   /*-----------------------------------------------------------
     useEffect 内を全面改修
     1. orgs/orgId/members を監視
@@ -103,8 +111,8 @@ export default function AdminTop({ userIcon, role, userName }: Props) {
             limit(1)
           );
           const uSnap = await getDocs(uQuery);
-
-          const name = uSnap.docs[0]?.data().name ?? "";
+          const userData = uSnap.docs[0]?.data() ?? {};
+          const name = userData.name ?? "";
 
           // ----- ★ ここで進捗を計算 -----
           const fields = [
@@ -120,23 +128,77 @@ export default function AdminTop({ userIcon, role, userName }: Props) {
           const progress = Math.round((filled / fields.length) * 100);
           // --------------------------------
 
-          return { id: d.id, name, ...data, progress };
+          return {
+            id: d.id,
+            name,
+            ...userData,
+            ...data,
+            stars: data.stars || {},
+            connections: data.connections || {},
+            progress,
+          };
         })
       );
-
-      // 並べ替え（メール末尾の数字順想定）
-      list.sort((a, b) => {
+      const sortByNum = (a: any, b: any) => {
         const numA = parseInt(a.id.match(/(\d{4})/)?.[1] ?? "0", 10);
         const numB = parseInt(b.id.match(/(\d{4})/)?.[1] ?? "0", 10);
         return numA - numB;
-      });
+      };
+      switch (sortOrder) {
+        case "num":
+          list.sort((a, b) => {
+            const numA = parseInt(a.id.match(/(\d{4})/)?.[1] ?? "0", 10);
+            const numB = parseInt(b.id.match(/(\d{4})/)?.[1] ?? "0", 10);
+            return numA - numB;
+          });
 
-      setUsers(list);
+          setUsers(list);
+          break;
+
+        case "star":
+          // ★ 分ける
+          const starredList = list.filter((u) => myStars[u.id] === "stared");
+          const othersList = list.filter((u) => myStars[u.id] !== "stared");
+          // ★ 番号順に並び替え（num順）
+
+          starredList.sort(sortByNum);
+          othersList.sort(sortByNum);
+
+          // ★ 結合してセット
+          setUsers([...starredList, ...othersList]);
+          break;
+
+        case "connect":
+          // ★ 自分と繋がっているユーザー（connections に myEmail を含む）
+          const encodedEmail = encodeKey(myEmail || "");
+
+          const connectedList = list.filter(
+            (u) => u.connections[encodedEmail] === "connected"
+          );
+
+          // ★ その他
+          const otherList = list.filter(
+            (u) => u.connections[encodedEmail] !== "connected"
+          );
+          console.log(encodedEmail, connectedList, otherList);
+          // ★ 番号順に並べる
+          connectedList.sort(sortByNum);
+          otherList.sort(sortByNum);
+
+          // ★ 結合してセット
+          setUsers([...connectedList, ...otherList]);
+          break;
+        case "process":
+          list.sort((a, b) => b.progress - a.progress);
+          setUsers(list);
+          break;
+      }
+
       setLoading(false);
     });
 
     return unsub;
-  }, []);
+  }, [orgId, sortOrder || myStars]);
   //お気に入りチェック
   useEffect(() => {
     if (!myEmail) return;
@@ -187,7 +249,58 @@ export default function AdminTop({ userIcon, role, userName }: Props) {
 
     setMyStars(updatedStars); // ローカルも更新
   };
+  //並び替えの設定関数
+  const SortSelector = ({
+    sortOrder,
+    setSortOrder,
+  }: {
+    sortOrder: "num" | "star" | "connect" | "process";
+    setSortOrder: React.Dispatch<
+      React.SetStateAction<"num" | "star" | "connect" | "process">
+    >;
+  }) => {
+    const [open, setOpen] = useState(false);
 
+    const handleSelect = (value: string) => {
+      setSortOrder(value as "num" | "star" | "connect" | "process");
+      setOpen(false);
+    };
+
+    return (
+      <View>
+        <Pressable onPress={() => setOpen(!open)}>
+          <Text style={{ fontSize: 16, textAlign: "center" }}>
+            並び順：
+            {sortOptions.find((o) => o.value === sortOrder)?.label ??
+              "未選択"}{" "}
+            ▼
+          </Text>
+        </Pressable>
+
+        {open && (
+          <View
+            style={{
+              backgroundColor: "white",
+              borderWidth: 1,
+              borderColor: "#ccc",
+              borderRadius: 6,
+              marginTop: 4,
+            }}
+          >
+            {sortOptions.map((opt) => (
+              <Pressable
+                key={opt.value}
+                onPress={() => handleSelect(opt.value)}
+                style={{ padding: 10 }}
+              >
+                <Text style={{ fontSize: 15 }}>{opt.label}</Text>
+              </Pressable>
+            ))}
+          </View>
+        )}
+      </View>
+    );
+  };
   // 進捗に応じた色
   const colorOf = (p?: number) =>
     p === 100 ? "#28a745" : p === 0 ? "#c92424" : "#d98e00";
@@ -365,6 +478,9 @@ export default function AdminTop({ userIcon, role, userName }: Props) {
               <AntDesign name="right" size={16} color="#80590C" />
             </View>
           </Pressable>
+
+          <SortSelector sortOrder={sortOrder} setSortOrder={setSortOrder} />
+
           <FlatList
             style={{
               flex: 1,

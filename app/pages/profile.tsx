@@ -1,4 +1,5 @@
 import BeFriend from "@/components/my-components/beFriend";
+import EditProfile from "@/components/my-components/editProfile";
 import ProfileField from "@/components/my-components/profileField";
 import { db } from "@/lib/firebase";
 import { useNavigation } from "@react-navigation/native";
@@ -22,6 +23,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
 type now = {
   name?: string;
   icon?: string;
@@ -30,7 +32,7 @@ type now = {
   birthday?: string;
   zodiac?: string;
   hometown?: string;
-  hobby?: string;
+  hobby?: string[];
   authword?: number;
   [key: string]: any; // ← 不明なフィールドがあってもOK
 };
@@ -59,6 +61,31 @@ const batches = [
   { name: "blood", icon: require("../../assets/images/testbatch.png") },
   { name: "user", icon: require("../../assets/images/testbatch.png") },
 ];
+const customize = [
+  { id: "myFavorites", name: "私のお気に入り" }, //配列管理
+  { id: "myBest3", name: "My Best 3" }, //オブジェクト
+  { id: "myIf", name: "もしも..." }, //配列管理
+  { id: "myKnowmore", name: "もっと知りたい！" }, //自分で作る
+  { id: "myonephrase", name: "ひとこと" }, //pタグでオッケー
+];
+const myFavorites = [
+  { id: "food", name: "食べ物" },
+  { id: "music", name: "音楽" },
+  { id: "animal", name: "動物" },
+  { id: "sport", name: "スポーツ" },
+  { id: "brand", name: "ブランド" },
+  { id: "place", name: "場所" },
+  { id: "movie", name: "映画・テレビ" },
+  { id: "anime", name: "アニメ・漫画" },
+  { id: "youtube", name: "YouTube" },
+  { id: "app", name: "スマホアプリ" },
+  { id: "oshi", name: "推し" },
+  { id: "restaurant", name: "好きなご飯屋さん" },
+];
+const myIf = [
+  { id: "if0", name: "100万円使えたら？" },
+  { id: "if1", name: "一年間休めるなら何をしたい？" },
+];
 const chunkArray = (arr: any[], size: number) => {
   const result = [];
   for (let i = 0; i < arr.length; i += size) {
@@ -76,6 +103,7 @@ export default function ProfilePage() {
   const [now, setNow] = useState<now | null>(null); //今のuser. 全体データから
   const [user, setUser] = useState<now | null>(null); //今のuser、組織から
   const [isEditing, setIsEditing] = useState(false);
+  const [triggerSave, setTriggerSave] = useState(false); // 保存トリガー
   const [authWordOn, setAuthWordOn] = useState(false);
 
   const handleConnect = async () => {
@@ -99,16 +127,26 @@ export default function ProfilePage() {
       });
 
       setAuthWordOn(false);
-      alert("友達になりました");
+      alert("友達になりました,認証コード5分後に変わります！");
     } catch (error) {
       console.error("❌ connection更新失敗:", error);
     }
   };
   const handlePress = () => {
     if (isMyProfile) {
-      setIsEditing((prev) => !prev); // 編集 ↔ 編集完了 を切り替え
+      if (isEditing) {
+        // 編集完了時：編集モードOFFにしてから保存
+        setTriggerSave(true); // 保存をあとで実行
+
+        setTimeout(() => {
+          setIsEditing(false);
+        }, 1000); // 次の描画フレームで実行される（Reactの更新後）
+      } else {
+        // 編集開始時
+        setIsEditing(true);
+      }
     } else {
-      setAuthWordOn(true);
+      setAuthWordOn(true); // 他人のプロフィールの場合
     }
   };
   useEffect(() => {
@@ -152,52 +190,12 @@ export default function ProfilePage() {
         console.error("Firestore取得エラー:", err);
         setUser(null);
       });
-  }, [email, orgId]);
-  console.log(orgId, user, now);
+  }, [email, orgId, isEditing]);
   const rows = chunkArray(batches, 3);
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {/* プロフィール上部 */}
       <View style={styles.subcontainer}>
-        <View style={{ flexDirection: "row", marginTop: 60 }}>
-          <Image
-            source={
-              now?.icon
-                ? { uri: now?.icon } // ← ユーザーアイコン
-                : require("../../assets/images/testicons.png") // ← デフォルト
-            }
-            style={styles.avatar}
-          />
-          <View style={styles.profileInfo}>
-            <View style={styles.batches}>
-              {rows.map((row, rowIndex) => (
-                <View
-                  key={rowIndex}
-                  style={[
-                    styles.row,
-                    rowIndex % 2 === 1 && { marginLeft: 30 }, // 偶数行（index 1, 3, ...）に marginLeft
-                  ]}
-                >
-                  {row.map((batch, index) => (
-                    <Image
-                      key={index}
-                      source={batch.icon}
-                      style={styles.batch}
-                    />
-                  ))}
-                </View>
-              ))}
-            </View>
-            <Text style={[styles.label, { marginTop: 20, marginLeft: 10 }]}>
-              名前
-            </Text>
-            <Text style={[styles.name, { textAlign: "center" }]}>
-              {breakName(now?.name || "（名前未設定）")}
-            </Text>
-            {isMyProfile && <Text>{user?.authword}</Text>}
-          </View>
-        </View>
-
         <TouchableOpacity
           style={{
             position: "absolute",
@@ -232,31 +230,137 @@ export default function ProfilePage() {
             {isMyProfile ? (isEditing ? "編集完了" : "編集") : "友達になる"}
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={{
-            position: "absolute",
-            top: 26,
-            left: 30,
-            borderRadius: 41,
-            borderColor: "black",
-            borderWidth: 1,
-            width: 130,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            paddingVertical: 5,
-          }}
-          onPress={() => navigation.goBack()}
-        >
-          <Text
-            style={[
-              styles.label,
-              { textAlign: "center", alignItems: "center" },
-            ]}
+        {!isEditing && (
+          <TouchableOpacity
+            style={{
+              position: "absolute",
+              top: 26,
+              left: 30,
+              borderRadius: 41,
+              borderColor: "black",
+              borderWidth: 1,
+              width: 130,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              paddingVertical: 5,
+            }}
+            onPress={() => navigation.goBack()}
           >
-            戻る
-          </Text>
-        </TouchableOpacity>
+            <Text
+              style={[
+                styles.label,
+                { textAlign: "center", alignItems: "center" },
+              ]}
+            >
+              戻る
+            </Text>
+          </TouchableOpacity>
+        )}
+        {!isEditing && (
+          <>
+            <View style={{ flexDirection: "row", marginTop: 60 }}>
+              <Image
+                source={
+                  now?.icon
+                    ? { uri: now?.icon } // ← ユーザーアイコン
+                    : require("../../assets/images/testicons.png") // ← デフォルト
+                }
+                style={styles.avatar}
+              />
+              <View style={styles.profileInfo}>
+                <View style={styles.batches}>
+                  {rows.map((row, rowIndex) => (
+                    <View
+                      key={rowIndex}
+                      style={[
+                        styles.row,
+                        rowIndex % 2 === 1 && { marginLeft: 30 }, // 偶数行（index 1, 3, ...）に marginLeft
+                      ]}
+                    >
+                      {row.map((batch, index) => (
+                        <Image
+                          key={index}
+                          source={batch.icon}
+                          style={styles.batch}
+                        />
+                      ))}
+                    </View>
+                  ))}
+                </View>
+                <Text style={[styles.label, { marginTop: 20, marginLeft: 10 }]}>
+                  名前
+                </Text>
+                <Text style={[styles.name, { textAlign: "center" }]}>
+                  {breakName(now?.name || "（名前未設定）")}
+                </Text>
+                {isMyProfile && <Text>{user?.authword}</Text>}
+              </View>
+            </View>
+            <Text style={[styles.label, { marginVertical: 12 }]}>基本情報</Text>
+            <View>
+              <ProfileField label="誕生日">
+                <Text style={styles.profileText}>
+                  {user?.birthday || now?.birthday || "未入力"}
+                </Text>
+              </ProfileField>
+
+              <ProfileField label="出身国">
+                <Text style={styles.profileText}>
+                  {user?.hometown || now?.hometown || "未入力"}
+                </Text>
+              </ProfileField>
+
+              <ProfileField label="星座">
+                <Text style={styles.profileText}>
+                  {user?.zodiac || now?.zodiac || "未入力"}
+                </Text>
+              </ProfileField>
+
+              <ProfileField label="血液型">
+                <Text style={styles.profileText}>
+                  {user?.bloodType || now?.bloodType || "未入力"}
+                </Text>
+              </ProfileField>
+
+              <ProfileField label="mbti">
+                <Text style={styles.profileText}>
+                  {user?.mbti || now?.mbti || "未入力"}
+                </Text>
+              </ProfileField>
+
+              <ProfileField label="趣味">
+                <Text style={styles.profileText}>
+                  {Array.isArray(user?.hobby) && user?.hobby.length > 0
+                    ? user.hobby.join(" 、 ")
+                    : "未入力"}
+                </Text>
+              </ProfileField>
+            </View>
+
+            {!isMyProfile &&
+              (relation === "connected" ? (
+                <Text>you can view the profile</Text>
+              ) : (
+                <Text>you cannot view the profile</Text>
+              ))}
+            <Text style={[styles.label, { marginVertical: 12 }]}>
+              私のお気に入り
+            </Text>
+          </>
+        )}
+        {isEditing && (
+          <EditProfile
+            user={user}
+            now={now}
+            orgId={orgId}
+            triggerSave={triggerSave}
+            onSaveComplete={() => {
+              setTriggerSave(false); // 保存後トリガーをリセット
+              setIsEditing(false); // 編集モード解除
+            }}
+          />
+        )}
         {authWordOn && (
           <BeFriend
             visible={authWordOn}
@@ -266,52 +370,6 @@ export default function ProfilePage() {
             email={email as string}
           />
         )}
-        <Text style={[styles.label, { marginVertical: 12 }]}>基本情報</Text>
-
-        <ProfileField label="誕生日">
-          <Text style={styles.profileText}>
-            {user?.birthday || now?.birthday || "未入力"}
-          </Text>
-        </ProfileField>
-
-        <ProfileField label="出身国">
-          <Text style={styles.profileText}>
-            {user?.hometown || now?.hometown || "未入力"}
-          </Text>
-        </ProfileField>
-
-        <ProfileField label="星座">
-          <Text style={styles.profileText}>
-            {user?.zodiac || now?.zodiac || "未入力"}
-          </Text>
-        </ProfileField>
-
-        <ProfileField label="血液型">
-          <Text style={styles.profileText}>
-            {user?.bloodType || now?.bloodType || "未入力"}
-          </Text>
-        </ProfileField>
-
-        <ProfileField label="mbti">
-          <Text style={styles.profileText}>
-            {user?.mbti || now?.mbti || "未入力"}
-          </Text>
-        </ProfileField>
-
-        <ProfileField label="趣味">
-          <Text style={styles.profileText}>
-            {user?.hobby || now?.hobby || "未入力"}
-          </Text>
-        </ProfileField>
-        {!isMyProfile &&
-          (relation === "connected" ? (
-            <Text>you can view the profile</Text>
-          ) : (
-            <Text>you cannot view the profile</Text>
-          ))}
-        <Text style={[styles.label, { marginVertical: 12 }]}>
-          私のお気に入り
-        </Text>
       </View>
     </ScrollView>
   );
