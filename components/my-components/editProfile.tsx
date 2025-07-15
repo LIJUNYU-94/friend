@@ -1,26 +1,27 @@
 import { db } from "@/lib/firebase";
 import { Picker } from "@react-native-picker/picker";
-import * as ImagePicker from "expo-image-picker";
 import {
   collection,
   doc,
   getDoc,
   onSnapshot,
   query,
+  setDoc,
   updateDoc,
 } from "firebase/firestore";
-import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 import React, { useEffect, useState } from "react";
 import {
   Button,
-  Image,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { customize, myFavorites, myIf } from "./customize";
+import UploadIcon from "./uploadToCloudinary";
 
 type EditProfileProps = {
   user: any;
@@ -28,31 +29,6 @@ type EditProfileProps = {
   orgId: string | string[];
   triggerSave: boolean;
   onSaveComplete: () => void;
-};
-const uploadImageAsync = async (uri: string) => {
-  const storage = getStorage();
-
-  // blob取得（React Native対応）
-  const blob = await new Promise<Blob>((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.onload = () => resolve(xhr.response);
-    xhr.onerror = () => reject(new Error("blob変換失敗"));
-    xhr.responseType = "blob";
-    xhr.open("GET", uri, true);
-    xhr.send(null);
-  });
-
-  const filename = `profile_${Date.now()}.jpg`;
-  const storageRef = ref(storage, `profile_images/${filename}`);
-
-  await uploadBytes(storageRef, blob);
-  const downloadUrl = await getDownloadURL(storageRef);
-  return downloadUrl;
-};
-const formatDateToJP = (date: Date): string => {
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-  return `${month}月${day}日`;
 };
 
 function getZodiacFromDate(date: Date): string {
@@ -83,6 +59,7 @@ const EditProfile: React.FC<EditProfileProps> = ({
   triggerSave,
   onSaveComplete,
 }) => {
+  const orgIdStr = Array.isArray(orgId) ? orgId[0] : orgId;
   //nowはusers userはmembers
   // "8月1日" のような形式を前提にする
   const parseBirthday = (birthdayStr: string) => {
@@ -121,6 +98,115 @@ const EditProfile: React.FC<EditProfileProps> = ({
   const [availableHobbys, setAvailableHobbys] = useState<string[]>([]);
   const [hobby, sethobby] = useState<string[]>(user.hobby);
   const [isEditingHobby, setEditingHobby] = useState(false);
+  const [isEditingCustomize, setEditingCustomize] = useState(false);
+  const [selectedFavors, setSelectedFavors] = useState<{
+    [key: string]: boolean;
+  }>({});
+  const [userFavorites, setUserFavorites] = useState<{ [key: string]: string }>(
+    {}
+  );
+  const [userBest3, setUserBest3] = useState<{
+    title: string;
+    first: string;
+    second: string;
+    third: string;
+  }>({ title: "", first: "", second: "", third: "" });
+  const [userIf, setUserIf] = useState<{ [key: string]: string }>({});
+  const [userKnowmore, setUserKnowmore] = useState<
+    {
+      id: string;
+      name: string;
+      answer: string;
+    }[]
+  >([]);
+  const [userOnePhrase, setUserOnePhrase] = useState<string>("");
+  // ✅ この useEffect はそのあとに置く！
+  useEffect(() => {
+    setSelectedFavors((prev) => {
+      const next = { ...prev };
+
+      if (
+        userFavorites &&
+        Object.values(userFavorites).some((v) => v.trim() !== "")
+      ) {
+        next["myFavorites"] = true;
+      }
+
+      if (
+        userBest3 &&
+        [
+          userBest3.title,
+          userBest3.first,
+          userBest3.second,
+          userBest3.third,
+        ].some((v) => v.trim() !== "")
+      ) {
+        next["myBest3"] = true;
+      }
+
+      if (userIf && Object.values(userIf).some((v) => v.trim() !== "")) {
+        next["myIf"] = true;
+      }
+
+      if (userKnowmore && userKnowmore.length > 0) {
+        next["myKnowmore"] = true;
+      }
+
+      if (userOnePhrase && userOnePhrase.trim() !== "") {
+        next["myonephrase"] = true;
+      }
+
+      return next;
+    });
+  }, [userFavorites, userBest3, userIf, userKnowmore, userOnePhrase]);
+  useEffect(() => {
+    const loadUser = async () => {
+      const docSnap = await getDoc(
+        doc(db, "orgs", orgIdStr, "members", now.email)
+      );
+
+      if (!docSnap.exists()) return;
+
+      const data = docSnap.data();
+
+      // myFavorites
+      const resultFavorites: { [key: string]: string } = {};
+      myFavorites.forEach((fav) => {
+        resultFavorites[fav.id] = data.myFavorites?.[fav.id] || "";
+      });
+      setUserFavorites(resultFavorites);
+
+      // myIf
+      const resultIf: { [key: string]: string } = {};
+      myIf.forEach((q) => {
+        resultIf[q.id] = data.myIf?.[q.id] || "";
+      });
+      setUserIf(resultIf);
+
+      // myBest3
+      setUserBest3({
+        title: data.myBest3?.title || "",
+        first: data.myBest3?.first || "",
+        second: data.myBest3?.second || "",
+        third: data.myBest3?.third || "",
+      });
+
+      // myKnowmore（配列形式）
+      setUserKnowmore(data.myKnowmore || []);
+
+      // myonephrase（1行文字列）
+      setUserOnePhrase(data.myonephrase || "");
+    };
+
+    loadUser();
+  }, []);
+
+  const handleToggle = (id: string) => {
+    setSelectedFavors((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
   const handlehometownChange = (value: string) => {
     if (value === "その他") {
       sethometown(""); // クリア
@@ -129,12 +215,57 @@ const EditProfile: React.FC<EditProfileProps> = ({
       setCustomhometown("");
     }
   };
+  const handleSave = async () => {
+    const filteredFavorites = Object.fromEntries(
+      Object.entries(userFavorites).filter(([_, v]) => v.trim() !== "")
+    );
+
+    const filteredIf = Object.fromEntries(
+      Object.entries(userIf).filter(([_, v]) => v.trim() !== "")
+    );
+
+    const filteredBest3 = Object.fromEntries(
+      Object.entries(userBest3).filter(([_, v]) => v.trim() !== "")
+    );
+    console.log(userKnowmore);
+    const filteredKnowmore = userKnowmore.filter(
+      (v) =>
+        typeof v.name === "string" &&
+        typeof v.answer === "string" &&
+        (v.name.trim() !== "" || v.answer.trim() !== "")
+    );
+    console.log(filteredKnowmore);
+
+    const onePhrase = userOnePhrase.trim();
+
+    await setDoc(
+      doc(db, "orgs", orgIdStr, "members", now.email),
+      {
+        myFavorites: filteredFavorites,
+        myIf: filteredIf,
+        myBest3: filteredBest3,
+        myKnowmore: filteredKnowmore,
+        myonephrase: onePhrase,
+      },
+      { merge: true }
+    );
+
+    console.log("保存しました:", {
+      myFavorites: filteredFavorites,
+      myIf: filteredIf,
+      myBest3: filteredBest3,
+      myKnowmore: filteredKnowmore,
+
+      myonephrase: onePhrase,
+    });
+  };
   //保存用関数
   useEffect(() => {
     if (triggerSave) {
       saveProfile();
     }
   }, [triggerSave]);
+
   useEffect(() => {
     const fetchHobbys = async () => {
       try {
@@ -153,7 +284,6 @@ const EditProfile: React.FC<EditProfileProps> = ({
   }, [orgId]);
   const saveProfile = async () => {
     try {
-      const orgIdStr = Array.isArray(orgId) ? orgId[0] : orgId;
       const memberRef = doc(db, "orgs", orgIdStr, "members", now.email);
 
       await updateDoc(memberRef, {
@@ -165,7 +295,7 @@ const EditProfile: React.FC<EditProfileProps> = ({
         hobby,
       });
       console.log("✅ Firestore に保存完了");
-      console.log(birthday, zodiac, hometown, mbti, bloodType);
+
       onSaveComplete(); // 親に完了通知
     } catch (error) {
       console.error("❌ 保存失敗:", error);
@@ -186,47 +316,17 @@ const EditProfile: React.FC<EditProfileProps> = ({
       setCountries(Array.from(list));
     });
   }, []);
-  const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: [ImagePicker.MediaType.Image],
-      quality: 0.8,
-    });
-    if (!result.canceled) {
-      const localUri = result.assets[0].uri;
-      setImageUri(localUri);
-      try {
-        const uploadedUrl = await uploadImageAsync(localUri);
-        console.log("アップロード成功:", uploadedUrl);
-      } catch (err) {
-        console.error("アップロード失敗:", err);
-      }
-    }
-  };
+
   useEffect(() => {
     const newDateStr = `${selectedMonth}月${selectedDay}日`;
     setBirthday(newDateStr || birthday);
     const date = new Date(2000, selectedMonth - 1, selectedDay);
     setZodiac(getZodiacFromDate(date));
   }, [selectedMonth, selectedDay]);
-  console.log(availableHobbys);
+
   return (
     <View style={styles.container}>
-      <View style={styles.imageContainer}>
-        <Pressable onPress={pickImage}>
-          {imageUri && (
-            <View style={styles.imageWrapper}>
-              <Image
-                source={
-                  typeof imageUri === "string" ? { uri: imageUri } : imageUri
-                }
-                style={styles.image}
-              />
-              <View style={styles.ringOverlay} />
-            </View>
-          )}
-          <Text style={styles.changePhoto}>写真を変更</Text>
-        </Pressable>
-      </View>
+      <UploadIcon email={now.email} org={orgIdStr} />
 
       <View style={styles.formSection}>
         <View style={styles.fieldRow}>
@@ -235,20 +335,6 @@ const EditProfile: React.FC<EditProfileProps> = ({
             {now.name}
           </Text>
         </View>
-        {/* <View style={styles.fieldRow}>
-          <Text style={styles.label}>誕生日</Text>
-          <Pressable
-            style={{ flex: 1 }}
-            onPress={() => {
-              setShowPicker(true);
-              console.log(showPicker);
-            }}
-          >
-            <Text style={{ paddingVertical: 4, color: "#333" }}>
-              {birthday}
-            </Text>
-          </Pressable>
-        </View> */}
 
         {isEditingBirthday ? (
           <>
@@ -494,6 +580,351 @@ const EditProfile: React.FC<EditProfileProps> = ({
           </View>
         </View>
       </View>
+      <Pressable
+        style={{ flexDirection: "row" }}
+        onPress={() => {
+          if (isEditingCustomize) {
+            setEditingCustomize(false);
+            handleSave();
+          } else {
+            setEditingCustomize(true);
+          }
+        }}
+      >
+        <Text style={styles.label}>カスタマイズ</Text>
+        <Text
+          style={{
+            fontSize: 20,
+            marginLeft: 50,
+            paddingVertical: 5,
+            paddingHorizontal: 20,
+            borderColor: "red",
+            borderWidth: 2,
+            borderRadius: 20,
+          }}
+        >
+          編集
+        </Text>
+      </Pressable>
+
+      {isEditingCustomize && (
+        <View
+          style={{
+            position: "absolute",
+            borderRadius: 50,
+            padding: 30,
+            top: -50,
+            width: "110%",
+            height: "120%",
+            zIndex: 3,
+            backgroundColor: "white",
+          }}
+        >
+          <ScrollView>
+            {customize.map((item) => (
+              <TouchableOpacity
+                key={item.id}
+                onPress={() => handleToggle(item.id)}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginVertical: 6,
+                }}
+              >
+                <View
+                  style={{
+                    width: 20,
+                    height: 20,
+                    borderWidth: 1,
+                    borderColor: "#555",
+                    marginRight: 8,
+                    backgroundColor: selectedFavors[item.id] ? "#333" : "white",
+                  }}
+                />
+                <Text>{item.name}</Text>
+              </TouchableOpacity>
+            ))}
+            {customize
+              .filter((item) => selectedFavors[item.id]) // 選ばれたものだけ表示
+              .map((item) => (
+                <View key={item.id}>
+                  <Text
+                    style={{
+                      color: "#333",
+                      fontWeight: "bold",
+                      marginVertical: 5,
+                    }}
+                  >
+                    {item.name}
+                  </Text>
+
+                  {/* 中身の表示：id + name の形 */}
+                  {item.id === "myFavorites" &&
+                    myFavorites.map((fav) => (
+                      <View
+                        key={fav.id}
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          marginBottom: 8,
+                        }}
+                      >
+                        <Text style={{ marginRight: 6 }}>{fav.name}：</Text>
+                        <TextInput
+                          style={{
+                            borderWidth: 1,
+                            borderColor: "#ccc",
+                            paddingHorizontal: 8,
+                            paddingVertical: 4,
+                            borderRadius: 4,
+                            flex: 1,
+                          }}
+                          value={userFavorites[fav.id]}
+                          onChangeText={(text) =>
+                            setUserFavorites((prev) => ({
+                              ...prev,
+                              [fav.id]: text,
+                            }))
+                          }
+                          placeholder="入力してください"
+                        />
+                      </View>
+                    ))}
+
+                  {item.id === "myIf" &&
+                    myIf.map((q) => (
+                      <View
+                        key={q.id}
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          marginBottom: 8,
+                        }}
+                      >
+                        <Text style={{ marginRight: 6, flex: 1 }}>
+                          {q.name}：
+                        </Text>
+                        <TextInput
+                          style={{
+                            borderWidth: 1,
+                            borderColor: "#ccc",
+                            paddingHorizontal: 8,
+                            paddingVertical: 4,
+                            borderRadius: 4,
+                            flex: 2,
+                          }}
+                          value={userIf[q.id] || ""}
+                          onChangeText={(text) =>
+                            setUserIf((prev) => ({
+                              ...prev,
+                              [q.id]: text,
+                            }))
+                          }
+                          placeholder="回答を入力"
+                        />
+                      </View>
+                    ))}
+                  {item.id === "myBest3" && (
+                    <>
+                      <View style={{ marginBottom: 8 }}>
+                        <Text style={{ fontWeight: "bold" }}>タイトル：</Text>
+                        <TextInput
+                          style={styles.input}
+                          value={userBest3.title}
+                          onChangeText={(text) =>
+                            setUserBest3((prev) => ({ ...prev, title: text }))
+                          }
+                          placeholder="タイトルを入力"
+                        />
+                      </View>
+                      <View style={{ marginBottom: 8 }}>
+                        <Text style={{ fontWeight: "bold" }}>1位：</Text>
+                        <TextInput
+                          style={styles.input}
+                          value={userBest3.first}
+                          onChangeText={(text) =>
+                            setUserBest3((prev) => ({ ...prev, first: text }))
+                          }
+                          placeholder="1位を入力"
+                        />
+                      </View>
+                      <View style={{ marginBottom: 8 }}>
+                        <Text style={{ fontWeight: "bold" }}>2位：</Text>
+                        <TextInput
+                          style={styles.input}
+                          value={userBest3.second}
+                          onChangeText={(text) =>
+                            setUserBest3((prev) => ({ ...prev, second: text }))
+                          }
+                          placeholder="2位を入力"
+                        />
+                      </View>
+                      <View style={{ marginBottom: 8 }}>
+                        <Text style={{ fontWeight: "bold" }}>3位：</Text>
+                        <TextInput
+                          style={styles.input}
+                          value={userBest3.third}
+                          onChangeText={(text) =>
+                            setUserBest3((prev) => ({ ...prev, third: text }))
+                          }
+                          placeholder="3位を入力"
+                        />
+                      </View>
+                    </>
+                  )}
+
+                  {item.id === "myKnowmore" &&
+                    userKnowmore.map((entry, index) => (
+                      <View
+                        key={entry.id}
+                        style={{
+                          borderWidth: 1,
+                          borderColor: "#ccc",
+                          borderRadius: 8,
+                          padding: 10,
+                          marginBottom: 10,
+                        }}
+                      >
+                        <Text style={{ fontWeight: "bold", marginBottom: 4 }}>
+                          No.{entry.id}
+                        </Text>
+
+                        <TextInput
+                          style={{
+                            borderWidth: 1,
+                            borderColor: "#aaa",
+                            padding: 6,
+                            borderRadius: 4,
+                            marginBottom: 6,
+                          }}
+                          placeholder="タイトルを入力"
+                          value={entry.name}
+                          onChangeText={(text) => {
+                            const newKnowmore = [...userKnowmore];
+                            newKnowmore[index].name = text;
+                            setUserKnowmore(newKnowmore);
+                          }}
+                        />
+
+                        <TextInput
+                          style={{
+                            borderWidth: 1,
+                            borderColor: "#aaa",
+                            padding: 6,
+                            borderRadius: 4,
+                          }}
+                          placeholder="回答を入力"
+                          value={entry.answer}
+                          onChangeText={(text) => {
+                            const newKnowmore = [...userKnowmore];
+                            newKnowmore[index].answer = text;
+                            setUserKnowmore(newKnowmore);
+                          }}
+                        />
+
+                        <TouchableOpacity
+                          onPress={() => {
+                            const newKnowmore = [...userKnowmore];
+                            newKnowmore.splice(index, 1);
+                            // id を振り直す
+                            const renumbered = newKnowmore.map((item, i) => ({
+                              ...item,
+                              id: String(i),
+                            }));
+                            setUserKnowmore(renumbered);
+                          }}
+                          style={{
+                            marginTop: 8,
+                            alignSelf: "flex-end",
+                          }}
+                        >
+                          <Text style={{ color: "red" }}>削除</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+
+                  {/* 追加ボタン */}
+                  {item.id === "myKnowmore" && (
+                    <>
+                      <TouchableOpacity
+                        onPress={() => {
+                          setUserKnowmore((prev) => [
+                            ...prev,
+                            {
+                              id: String(prev.length),
+                              name: "",
+                              answer: "",
+                            },
+                          ]);
+                        }}
+                        style={{
+                          backgroundColor: "#ddd",
+                          padding: 8,
+                          borderRadius: 6,
+                          alignSelf: "flex-start",
+                          marginTop: 10,
+                        }}
+                      >
+                        <Text>＋ 新しく追加</Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
+
+                  {item.id === "myonephrase" && (
+                    <View style={{ marginTop: 8 }}>
+                      {/* <Text style={{ marginBottom: 4, fontWeight: "bold" }}>
+                      ひとこと
+                    </Text> */}
+                      <TextInput
+                        multiline
+                        numberOfLines={3}
+                        placeholder="例：みんなともっと仲良くなりたい！"
+                        value={userOnePhrase}
+                        onChangeText={setUserOnePhrase}
+                        style={{
+                          borderWidth: 1,
+                          borderColor: "#ccc",
+                          padding: 8,
+                          borderRadius: 4,
+                          textAlignVertical: "top", // Androidで上から始まるように
+                        }}
+                      />
+                    </View>
+                  )}
+                </View>
+              ))}{" "}
+            <TouchableOpacity
+              style={{
+                alignSelf: "center",
+                borderRadius: 29,
+                width: 200,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                paddingVertical: 5,
+                backgroundColor: "#D9D9D9",
+                marginVertical: 30,
+              }}
+              onPress={() => {
+                handleSave(), setEditingCustomize(false);
+              }}
+            >
+              <Text
+                style={[
+                  styles.label,
+                  {
+                    textAlign: "center",
+                    alignItems: "center",
+                    color: "black",
+                  },
+                ]}
+              >
+                保存
+              </Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
+      )}
     </View>
   );
 };

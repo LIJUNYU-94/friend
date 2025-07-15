@@ -1,4 +1,5 @@
 import BeFriend from "@/components/my-components/beFriend";
+import { myFavorites, myIf } from "@/components/my-components/customize";
 import EditProfile from "@/components/my-components/editProfile";
 import ProfileField from "@/components/my-components/profileField";
 import { db } from "@/lib/firebase";
@@ -23,6 +24,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 
 type now = {
   name?: string;
@@ -36,6 +38,7 @@ type now = {
   authword?: number;
   [key: string]: any; // ← 不明なフィールドがあってもOK
 };
+
 //長すぎる名前を改行させる
 const breakName = (name: string) => {
   if (!name.includes(" ")) return name; // スペースないならそのまま
@@ -61,31 +64,7 @@ const batches = [
   { name: "blood", icon: require("../../assets/images/testbatch.png") },
   { name: "user", icon: require("../../assets/images/testbatch.png") },
 ];
-const customize = [
-  { id: "myFavorites", name: "私のお気に入り" }, //配列管理
-  { id: "myBest3", name: "My Best 3" }, //オブジェクト
-  { id: "myIf", name: "もしも..." }, //配列管理
-  { id: "myKnowmore", name: "もっと知りたい！" }, //自分で作る
-  { id: "myonephrase", name: "ひとこと" }, //pタグでオッケー
-];
-const myFavorites = [
-  { id: "food", name: "食べ物" },
-  { id: "music", name: "音楽" },
-  { id: "animal", name: "動物" },
-  { id: "sport", name: "スポーツ" },
-  { id: "brand", name: "ブランド" },
-  { id: "place", name: "場所" },
-  { id: "movie", name: "映画・テレビ" },
-  { id: "anime", name: "アニメ・漫画" },
-  { id: "youtube", name: "YouTube" },
-  { id: "app", name: "スマホアプリ" },
-  { id: "oshi", name: "推し" },
-  { id: "restaurant", name: "好きなご飯屋さん" },
-];
-const myIf = [
-  { id: "if0", name: "100万円使えたら？" },
-  { id: "if1", name: "一年間休めるなら何をしたい？" },
-];
+
 const chunkArray = (arr: any[], size: number) => {
   const result = [];
   for (let i = 0; i < arr.length; i += size) {
@@ -132,12 +111,12 @@ export default function ProfilePage() {
       console.error("❌ connection更新失敗:", error);
     }
   };
+
   const handlePress = () => {
     if (isMyProfile) {
       if (isEditing) {
         // 編集完了時：編集モードOFFにしてから保存
         setTriggerSave(true); // 保存をあとで実行
-
         setTimeout(() => {
           setIsEditing(false);
         }, 1000); // 次の描画フレームで実行される（Reactの更新後）
@@ -262,8 +241,8 @@ export default function ProfilePage() {
             <View style={{ flexDirection: "row", marginTop: 60 }}>
               <Image
                 source={
-                  now?.icon
-                    ? { uri: now?.icon } // ← ユーザーアイコン
+                  now?.icon || user?.icon
+                    ? { uri: now?.icon || user?.icon } // ← ユーザーアイコン
                     : require("../../assets/images/testicons.png") // ← デフォルト
                 }
                 style={styles.avatar}
@@ -338,15 +317,269 @@ export default function ProfilePage() {
               </ProfileField>
             </View>
 
-            {!isMyProfile &&
-              (relation === "connected" ? (
-                <Text>you can view the profile</Text>
+            {!isEditing &&
+              (isMyProfile || relation === "connected" ? (
+                <>
+                  {/* ▼ 以下、友達のみが見れる項目群 */}
+                  {user?.myFavorites &&
+                    Object.values(user.myFavorites).some(
+                      (v) => typeof v === "string" && v.trim() !== ""
+                    ) && (
+                      <View style={{ marginBottom: 12 }}>
+                        <Text style={[styles.label, { marginVertical: 12 }]}>
+                          私のお気に入り
+                        </Text>
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            flexWrap: "wrap",
+                            justifyContent: "space-between",
+                            gap: 8, // React Native Paper などの環境なら使える。なければ margin で調整
+                          }}
+                        >
+                          {Object.entries(user.myFavorites).map(
+                            ([key, val]) =>
+                              typeof val === "string" &&
+                              val.trim() !== "" && (
+                                <View
+                                  key={key}
+                                  style={{
+                                    width: "48%", // 2カラム（横に2つ並ぶ）
+                                    marginBottom: 12,
+                                  }}
+                                >
+                                  <ProfileField
+                                    label={
+                                      myFavorites.find((f) => f.id === key)
+                                        ?.name ?? ""
+                                    }
+                                  >
+                                    <Text
+                                      style={styles.profileText}
+                                      numberOfLines={1}
+                                      ellipsizeMode="tail"
+                                    >
+                                      {val}
+                                    </Text>
+                                  </ProfileField>
+                                </View>
+                              )
+                          )}
+                        </View>
+                      </View>
+                    )}
+
+                  {user?.myBest3 &&
+                    [
+                      user.myBest3.title,
+                      user.myBest3.first,
+                      user.myBest3.second,
+                      user.myBest3.third,
+                    ].some((v) => v.trim() !== "") && (
+                      <View style={{ marginBottom: 12 }}>
+                        <Text style={[styles.label, { marginVertical: 12 }]}>
+                          My Best 3
+                        </Text>
+                        <ProfileField label="テーマ">
+                          <Text
+                            style={[
+                              styles.profileText,
+                              { marginLeft: "10%", color: "black" },
+                            ]}
+                          >
+                            {user.myBest3.title}
+                          </Text>
+                        </ProfileField>
+                        <ProfileField label="">
+                          <Text numberOfLines={1} ellipsizeMode="tail">
+                            <Text style={[styles.profileText]}>１：</Text>
+                            <Text
+                              style={[styles.profileText, { color: "black" }]}
+                            >
+                              {user.myBest3.first}
+                            </Text>
+                          </Text>
+                        </ProfileField>
+                        <ProfileField label="">
+                          <Text numberOfLines={1} ellipsizeMode="tail">
+                            <Text style={[styles.profileText]}>２：</Text>
+                            <Text
+                              style={[styles.profileText, { color: "black" }]}
+                            >
+                              {user.myBest3.second}
+                            </Text>
+                          </Text>
+                        </ProfileField>
+                        <ProfileField label="">
+                          <Text numberOfLines={1} ellipsizeMode="tail">
+                            <Text style={[styles.profileText]}>３：</Text>
+                            <Text
+                              style={[styles.profileText, { color: "black" }]}
+                            >
+                              {user.myBest3.third}
+                            </Text>
+                          </Text>
+                        </ProfileField>
+                      </View>
+                    )}
+
+                  {user?.myIf &&
+                    Object.values(user.myIf).some(
+                      (v) => typeof v === "string" && v.trim() !== ""
+                    ) && (
+                      <View style={{ marginBottom: 20 }}>
+                        <Text style={[styles.label, { marginVertical: 12 }]}>
+                          もしも...
+                        </Text>
+
+                        <ScrollView
+                          horizontal
+                          showsHorizontalScrollIndicator={true}
+                        >
+                          {myIf.map((q) => {
+                            const val = user.myIf?.[q.id];
+                            if (!val || val.trim() === "") return null;
+
+                            return (
+                              <View
+                                key={q.id}
+                                style={{
+                                  width: 187,
+                                  height: 187,
+                                  borderRadius: 187,
+                                  justifyContent: "center",
+                                  alignItems: "center",
+                                  backgroundColor: "white",
+                                  marginRight: 30,
+                                  marginBottom: 15,
+                                  padding: 10,
+                                  position: "relative",
+                                }}
+                              >
+                                <Text
+                                  style={{
+                                    fontSize: 16,
+                                    color: "#80590C",
+                                    textAlign: "center",
+                                    position: "absolute",
+                                    top: 35,
+                                  }}
+                                >
+                                  {q.name}
+                                </Text>
+                                <Text
+                                  numberOfLines={1}
+                                  ellipsizeMode="tail"
+                                  style={{
+                                    marginTop: 8,
+                                    fontSize: 16,
+                                    textAlign: "center",
+                                  }}
+                                >
+                                  {val}
+                                </Text>
+                              </View>
+                            );
+                          })}
+                        </ScrollView>
+                      </View>
+                    )}
+
+                  {user?.myKnowmore && user.myKnowmore.length > 0 && (
+                    <View style={{ marginBottom: 12 }}>
+                      <Text style={[styles.label, { marginVertical: 12 }]}>
+                        もっと知りたい！
+                      </Text>
+                      {user.myKnowmore.map(
+                        (k: { id: string; name?: string; answer?: string }) =>
+                          (k.name?.trim() || k.answer?.trim()) && (
+                            <ProfileField key={k.id} label={k.name ?? ""}>
+                              <Text style={styles.profileText}>{k.answer}</Text>
+                            </ProfileField>
+                          )
+                      )}
+                    </View>
+                  )}
+
+                  {user?.myonephrase?.trim() !== "" && (
+                    <View style={{ marginBottom: 12 }}>
+                      <Text style={[styles.label, { marginVertical: 12 }]}>
+                        ひとこと
+                      </Text>
+                      <Text
+                        style={{
+                          width: "90%",
+                          minHeight: 100,
+                          alignSelf: "center",
+                          backgroundColor: "white",
+                          padding: 30,
+                          color: "#80590C",
+                          fontSize: 20,
+                          letterSpacing: 1,
+                        }}
+                      >
+                        {user?.myonephrase}
+                      </Text>
+                    </View>
+                  )}
+
+                  <TouchableOpacity
+                    style={{
+                      alignSelf: "center",
+                      borderRadius: 29,
+                      width: 200,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      paddingVertical: 5,
+                      backgroundColor: "#D9D9D9",
+                      marginVertical: 30,
+                    }}
+                    onPress={handlePress}
+                  >
+                    <Text
+                      style={[
+                        styles.label,
+                        {
+                          textAlign: "center",
+                          alignItems: "center",
+                          color: "black",
+                        },
+                      ]}
+                    >
+                      プロフィール編集
+                    </Text>
+                  </TouchableOpacity>
+                </>
               ) : (
-                <Text>you cannot view the profile</Text>
+                <View>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      textAlign: "center",
+                      color: "#6A4402",
+                      letterSpacing: 1.5,
+                    }}
+                  >
+                    <MaterialCommunityIcons
+                      name="eye-off"
+                      size={24}
+                      color="#333"
+                    />
+                    ここからは友達しか見れません！
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      textAlign: "center",
+                      color: "#6A4402",
+                      letterSpacing: 1.5,
+                    }}
+                  >
+                    友達に話しかけて友達になりましょう！
+                  </Text>
+                </View>
               ))}
-            <Text style={[styles.label, { marginVertical: 12 }]}>
-              私のお気に入り
-            </Text>
           </>
         )}
         {isEditing && (

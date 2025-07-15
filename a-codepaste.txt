@@ -13,4 +13,8 @@ await updateDoc(doc(db, "orgs", orgId), {
   hobbys: arrayRemove("アニメ"),
 });
 
+import { customize,myFavorites,myIf } from "./customize";
+
+
+
 

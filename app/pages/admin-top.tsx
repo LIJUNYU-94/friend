@@ -65,6 +65,7 @@ const sortOptions = [
 ];
 //
 const orgId = "orgs_aw24"; // ★ 固定ならここ、動的なら props で受け取る　　　複数の組織になる場合に修正すべきところ2
+const orgIdStr = Array.isArray(orgId) ? orgId[0] : orgId;
 export default function AdminTop({ userIcon, role, userName }: Props) {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,6 +73,7 @@ export default function AdminTop({ userIcon, role, userName }: Props) {
   const [totalCount, setTotalCount] = useState(0);
   //管理者専用：
   //ユーザー専用：
+  const [icon, setIcon] = useState(userIcon);
   const userColumns = 2;
   const myEmail = getAuth().currentUser?.email;
   const [myStars, setMyStars] = useState<Record<string, string>>({});
@@ -84,6 +86,7 @@ export default function AdminTop({ userIcon, role, userName }: Props) {
       setOrg(data.name);
     }
   });
+
   //useStateで並び順管理
   const [sortOrder, setSortOrder] = useState<
     "num" | "star" | "connect" | "process" //番号順、星？、繋がり？完成度？
@@ -102,42 +105,44 @@ export default function AdminTop({ userIcon, role, userName }: Props) {
       setLoading(true);
 
       const list = await Promise.all(
-        snap.docs.map(async (d) => {
-          const data = d.data();
-          // ★ name は email で users を検索して取得
-          const uQuery = query(
-            collection(db, "users"),
-            where("email", "==", d.id),
-            limit(1)
-          );
-          const uSnap = await getDocs(uQuery);
-          const userData = uSnap.docs[0]?.data() ?? {};
-          const name = userData.name ?? "";
+        snap.docs
+          .filter((d) => d.id !== myEmail)
+          .map(async (d) => {
+            const data = d.data();
+            // ★ name は email で users を検索して取得
+            const uQuery = query(
+              collection(db, "users"),
+              where("email", "==", d.id),
+              limit(1)
+            );
+            const uSnap = await getDocs(uQuery);
+            const userData = uSnap.docs[0]?.data() ?? {};
+            const name = userData.name ?? "";
 
-          // ----- ★ ここで進捗を計算 -----
-          const fields = [
-            "birthday",
-            "hobby",
-            "mbti",
-            "icon",
-            "bloodType",
-            "zodiac",
-            "hometown",
-          ]; // 必須項目リスト
-          const filled = fields.filter((k) => data[k] !== "").length;
-          const progress = Math.round((filled / fields.length) * 100);
-          // --------------------------------
+            // ----- ★ ここで進捗を計算 -----
+            const fields = [
+              "birthday",
+              "hobby",
+              "mbti",
+              "icon",
+              "bloodType",
+              "zodiac",
+              "hometown",
+            ]; // 必須項目リスト
+            const filled = fields.filter((k) => data[k] !== "").length;
+            const progress = Math.round((filled / fields.length) * 100);
+            // --------------------------------
 
-          return {
-            id: d.id,
-            name,
-            ...userData,
-            ...data,
-            stars: data.stars || {},
-            connections: data.connections || {},
-            progress,
-          };
-        })
+            return {
+              id: d.id,
+              name,
+              ...userData,
+              ...data,
+              stars: data.stars || {},
+              connections: data.connections || {},
+              progress,
+            };
+          })
       );
       const sortByNum = (a: any, b: any) => {
         const numA = parseInt(a.id.match(/(\d{4})/)?.[1] ?? "0", 10);
@@ -206,11 +211,15 @@ export default function AdminTop({ userIcon, role, userName }: Props) {
     const unsubscribe = onSnapshot(userRef, async (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
+        if (data.icon) {
+          //icon input
+          setIcon(data.icon);
+        }
         const connections = data.connections ?? {};
         const snapshot = await getDocs(
           collection(db, "orgs", orgId, "members")
         );
-        const total = snapshot.size; // ← ドキュメント数がそのまま人数！
+        const total = snapshot.size - 1; // ← ドキュメント数がそのまま人数！
 
         // 自分が connected としてる相手の数を数える
         const count = Object.values(connections).filter(
@@ -316,6 +325,7 @@ export default function AdminTop({ userIcon, role, userName }: Props) {
       return item.connections[encodedEmail] ?? "none"; // "connected" / "none"
     };
     const connectionStatus = getConnectionStatus(item, myEmail ?? undefined);
+
     return (
       <View
         style={[
@@ -436,7 +446,15 @@ export default function AdminTop({ userIcon, role, userName }: Props) {
                 </View>
               </View>
             </View>
-            <TouchableOpacity style={{ alignSelf: "center", marginLeft: 20 }}>
+            <TouchableOpacity
+              style={{ alignSelf: "center", marginLeft: 20 }}
+              onPress={() =>
+                router.push({
+                  pathname: "/pages/collection",
+                  params: { orgId: orgId, myEmail: myEmail },
+                })
+              }
+            >
               <Text style={{ color: "#80590C", fontSize: 16 }}>もっと見る</Text>
             </TouchableOpacity>
             <AntDesign name="right" size={16} color="#80590C" />
@@ -463,8 +481,8 @@ export default function AdminTop({ userIcon, role, userName }: Props) {
             >
               <Image
                 source={
-                  userIcon
-                    ? { uri: userIcon }
+                  icon
+                    ? { uri: icon }
                     : require("../../assets/images/testicon.png")
                 }
                 style={styles.logo}
@@ -557,6 +575,7 @@ const styles = StyleSheet.create({
   logo: {
     width: 46,
     height: 46,
+    borderRadius: 46,
   },
   info: {
     flex: 1,
