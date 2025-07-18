@@ -41,6 +41,7 @@ type Props = {
   userIcon?: string; // 画像 URL（空ならテスト用アイコンを表示）
   role?: "admin" | "member"; // 役割
   userName?: string; // ユーザー名
+  orgId?: string;
 };
 //長すぎる名前を改行させる
 const breakName = (name: string) => {
@@ -64,9 +65,8 @@ const sortOptions = [
   { label: "完成度順", value: "process" },
 ];
 //
-const orgId = "orgs_aw24"; // ★ 固定ならここ、動的なら props で受け取る　　　複数の組織になる場合に修正すべきところ2
-const orgIdStr = Array.isArray(orgId) ? orgId[0] : orgId;
-export default function AdminTop({ userIcon, role, userName }: Props) {
+// const orgId = "orgs_aw24"; // ★ 固定ならここ、動的なら props で受け取る　　　複数の組織になる場合に修正すべきところ2
+export default function AdminTop({ userIcon, role, userName, orgId }: Props) {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [connectedCount, setConnectedCount] = useState(0);
@@ -78,7 +78,7 @@ export default function AdminTop({ userIcon, role, userName }: Props) {
   const myEmail = getAuth().currentUser?.email;
   const [myStars, setMyStars] = useState<Record<string, string>>({});
   const [org, setOrg] = useState("");
-  const orgRef = doc(db, "orgs", orgId);
+  const orgRef = doc(db, "orgs", orgId as string);
   const encodeKey = (email: string): string => email.replace(/\./g, "__");
   getDoc(orgRef).then((docSnap) => {
     if (docSnap.exists()) {
@@ -98,7 +98,7 @@ export default function AdminTop({ userIcon, role, userName }: Props) {
   -----------------------------------------------------------*/
   useEffect(() => {
     const membersQuery = query(
-      collection(db, "orgs", orgId, "members"),
+      collection(db, "orgs", orgId as string, "members"),
       where("role", "in", ["member", "admin"]) // ← ここで絞り込み
     );
     const unsub = onSnapshot(membersQuery, async (snap) => {
@@ -106,7 +106,12 @@ export default function AdminTop({ userIcon, role, userName }: Props) {
 
       const list = await Promise.all(
         snap.docs
-          .filter((d) => d.id !== myEmail)
+          .filter((d) => {
+            if (role === "member") {
+              return d.id !== myEmail; // メンバーは自分を除外
+            }
+            return true; // adminは全員表示
+          })
           .map(async (d) => {
             const data = d.data();
             // ★ name は email で users を検索して取得
@@ -207,7 +212,7 @@ export default function AdminTop({ userIcon, role, userName }: Props) {
   //お気に入りチェック
   useEffect(() => {
     if (!myEmail) return;
-    const userRef = doc(db, "orgs", orgId, "members", myEmail);
+    const userRef = doc(db, "orgs", orgId as string, "members", myEmail);
     const unsubscribe = onSnapshot(userRef, async (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
@@ -217,7 +222,7 @@ export default function AdminTop({ userIcon, role, userName }: Props) {
         }
         const connections = data.connections ?? {};
         const snapshot = await getDocs(
-          collection(db, "orgs", orgId, "members")
+          collection(db, "orgs", orgId as string, "members")
         );
         const total = snapshot.size - 1; // ← ドキュメント数がそのまま人数！
 
@@ -232,7 +237,7 @@ export default function AdminTop({ userIcon, role, userName }: Props) {
     });
 
     return unsubscribe;
-  }, [myEmail]);
+  }, [myEmail, orgId]);
   //お気に入りチェック
   const didIStar = (targetEmail: string | undefined): boolean => {
     if (!targetEmail) {
@@ -243,7 +248,7 @@ export default function AdminTop({ userIcon, role, userName }: Props) {
   //お気に入りマックの切り替え
   const toggleStar = async (targetEmail: string | undefined) => {
     if (!myEmail || !targetEmail) return;
-    const userRef = doc(db, "orgs", orgId, "members", myEmail); // ← ここ自分の stars の場所に応じて変えて
+    const userRef = doc(db, "orgs", orgId as string, "members", myEmail); // ← ここ自分の stars の場所に応じて変えて
     const updatedStars = { ...myStars };
 
     if (myStars[targetEmail] === "stared") {
@@ -280,9 +285,7 @@ export default function AdminTop({ userIcon, role, userName }: Props) {
         <Pressable onPress={() => setOpen(!open)}>
           <Text style={{ fontSize: 16, textAlign: "center" }}>
             並び順：
-            {sortOptions.find((o) => o.value === sortOrder)?.label ??
-              "未選択"}{" "}
-            ▼
+            {sortOptions.find((o) => o.value === sortOrder)?.label ?? "未選択"}▼
           </Text>
         </Pressable>
 
@@ -345,12 +348,17 @@ export default function AdminTop({ userIcon, role, userName }: Props) {
                 org: org,
                 orgId: orgId,
                 relation: connectionStatus || "",
+                role: role,
               }, // ← 他人のプロフィール
             })
           }
         >
           <Image
-            style={{ width: 94, height: 94 }}
+            style={[
+              role === "member"
+                ? { width: 94, height: 94, borderRadius: 94 }
+                : { width: 64, height: 64, borderRadius: 64 },
+            ]}
             source={
               item.icon
                 ? { uri: item.icon } // ← ユーザーアイコン
@@ -358,31 +366,51 @@ export default function AdminTop({ userIcon, role, userName }: Props) {
             }
           />
         </Pressable>
-        <Text style={[styles.mark, { right: 10, backgroundColor: "white" }]}>
-          {role === "member" && connectionStatus === "connected" && "✔︎"}
-        </Text>
-        <Text style={[styles.mark, { left: 10 }]}>
-          {role === "member" && (
-            <TouchableOpacity onPress={() => toggleStar(item.id)}>
-              <Text style={{ fontSize: 18 }}>
-                {didIStar(item.id) ? "★" : "☆"}
-              </Text>
-            </TouchableOpacity>
+        {role === "member" && (
+          <>
+            <Text
+              style={[styles.mark, { right: 10, backgroundColor: "white" }]}
+            >
+              {connectionStatus === "connected" && "✔︎"}
+            </Text>
+            <Text style={[styles.mark, { left: 10 }]}>
+              {
+                <TouchableOpacity onPress={() => toggleStar(item.id)}>
+                  <Text style={{ fontSize: 18 }}>
+                    {didIStar(item.id) ? "★" : "☆"}
+                  </Text>
+                </TouchableOpacity>
+              }
+            </Text>
+          </>
+        )}
+        <View
+          style={[
+            styles.info,
+            role === "member" && {
+              marginLeft: 0,
+              flexWrap: "wrap",
+              flexDirection: "row",
+            },
+          ]}
+        >
+          {role === "member" ? (
+            <Text style={[styles.name, { marginTop: 25 }]} numberOfLines={2}>
+              {breakName(item.name || "（名前未設定）")}
+            </Text>
+          ) : (
+            <Text style={[styles.name]}>{item.name || "（名前未設定）"}</Text>
           )}
-        </Text>
-        <View style={[styles.info, role === "member" && { marginLeft: 0 }]}>
-          <Text
-            style={[styles.name, role === "member" && { marginTop: 25 }]}
-            numberOfLines={2}
-          >
-            {breakName(item.name || "（名前未設定）")}
-          </Text>
+
           {role === "admin" && (
             <Text style={styles.email}>{item.id || "---"}</Text>
           )}
           {item.progress !== undefined && role === "admin" && (
-            <Text style={[styles.progress, { color: colorOf(item.progress) }]}>
-              プロフィール入力進捗：{item.progress}%
+            <Text style={styles.progress}>
+              <Text>プロフィール入力進捗：</Text>
+              <Text style={{ color: colorOf(item.progress) }}>
+                {item.progress}%
+              </Text>
             </Text>
           )}
         </View>
@@ -405,7 +433,13 @@ export default function AdminTop({ userIcon, role, userName }: Props) {
     <>
       {role === "admin" && (
         <SafeAreaView style={styles.container}>
-          <Icon userIcon={userIcon} role={role} userName={userName} />
+          <Icon
+            userIcon={userIcon}
+            role={role}
+            userName={userName}
+            email={myEmail ?? ""}
+            orgId={orgId}
+          />
           <Text style={styles.title}>参加メンバーの管理</Text>
 
           <FlatList
@@ -419,12 +453,19 @@ export default function AdminTop({ userIcon, role, userName }: Props) {
       )}
       {role === "member" && (
         <ScrollView style={styles.container}>
+          <Icon
+            userIcon={userIcon}
+            role={role}
+            userName={userName}
+            email={myEmail ?? ""}
+            orgId={orgId}
+          />
           <View style={styles.header}>
-            <Image
+            {/* <Image
               source={require("../../assets/images/icon.png")}
               style={styles.logo}
-            />
-            <Text style={styles.article}>
+            /> */}
+            <Text style={[styles.article, { marginLeft: 80 }]}>
               こんにちは！{"\n"}Webデザイン科の{userName}！{"\n"}
               今日は誰と仲良くなりたい？
             </Text>
@@ -534,19 +575,24 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF4E2",
   }, // クリーム色背景
   title: {
-    fontSize: 28,
+    fontSize: 20,
     fontWeight: "400",
     textAlign: "center",
-    paddingTop: 35,
-    paddingLeft: 50,
+    paddingTop: 40,
+    paddingLeft: 30,
     marginBottom: 35,
-    color: "#80590C",
+    color: "black",
   },
   row1: {
     flexDirection: "row",
     alignItems: "center",
+    alignSelf: "center",
     paddingVertical: 12,
-    marginLeft: 20,
+    paddingLeft: 20,
+    width: 350,
+    backgroundColor: "#FFEBC2",
+    borderRadius: 20,
+    marginBottom: 10,
   },
   row2: {
     position: "relative",
@@ -580,8 +626,7 @@ const styles = StyleSheet.create({
   info: {
     flex: 1,
     marginLeft: 20,
-    flexWrap: "wrap",
-    flexDirection: "row",
+
     color: "#80590C",
   },
   name: {
@@ -589,7 +634,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#80590C",
   },
-  email: { fontSize: 14, color: "#555" },
+  email: { fontSize: 14, color: "#555", letterSpacing: 1, marginVertical: 2 },
   progress: { fontSize: 14, marginTop: 2 },
   mark: {
     position: "absolute",
@@ -616,10 +661,10 @@ const styles = StyleSheet.create({
   article: { fontSize: 16, color: "#80590C", lineHeight: 20 },
   header: {
     marginVertical: 20,
-    width: "65%",
+    width: "80%",
     marginLeft: "14%",
-    flexDirection: "row", // ← これだけで横並びになる
-    alignItems: "center",
+    flexDirection: "row",
+    alignItems: "flex-end",
     justifyContent: "space-between",
   },
   progressBarBackground: {

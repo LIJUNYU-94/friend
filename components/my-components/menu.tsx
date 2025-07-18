@@ -1,7 +1,21 @@
 // app/components/Menu.tsx
-import React from "react";
+import { useOrgCandidates } from "@/components/my-components/useOrgCandidates";
+import { db } from "@/lib/firebase";
+import { router } from "expo-router";
+import { getAuth, signOut } from "firebase/auth";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  updateDoc,
+  where,
+} from "firebase/firestore";
+import React, { useEffect, useState } from "react";
 import {
   Image,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -9,16 +23,78 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
 type Props = {
   /** 左端からスライド表示にする場合は呼び出し側で Animated.View に包む */
   onClose: () => void;
   userName?: string;
-  role?: "管理者" | "メンバー";
+  role?: "admin" | "member";
   userIcon?: string;
+  email?: string;
+  orgId?: string;
 };
 
-export default function Menu({ onClose, userName, role, userIcon }: Props) {
+export default function Menu({
+  onClose,
+  userName,
+  role,
+  userIcon,
+  email,
+  orgId,
+}: Props) {
+  const [orgData, setOrgData] = useState<any>(null);
+  const [orgName, setOrgName] = useState<string>();
+  const [selectedOrgId, setSelectedOrgId] = useState<string | null>(
+    orgId || null
+  );
+  const [modalVisible, setModalVisible] = useState(false);
+  const [userData, setUserData] = useState<any>(null); //memberから
+  const [userDataOrigin, setUserDataOrigin] = useState<any>(null); //usersから
+  const { orgCandidates, loading } = useOrgCandidates(email || "");
+  const q = query(collection(db, "users"), where("email", "==", email));
+  const handleLogout = async () => {
+    try {
+      const auth = getAuth(); // ここでauthインスタンス取得
+      await signOut(auth);
+      console.log("ログアウトしました");
+      router.replace("/"); // TOPページに強制遷移（戻る不可）
+    } catch (error) {
+      console.error("ログアウト失敗:", error);
+    }
+  };
+  useEffect(() => {
+    const fetchOrg = async () => {
+      const orgRef = doc(db, "orgs", orgId as string);
+      const orgSnap = await getDoc(orgRef);
+      if (orgSnap.exists()) {
+        const data = orgSnap.data();
+        setOrgData(data); // ← useState にセット
+        setOrgName(data.name);
+      }
+      const userRef = doc(
+        db,
+        "orgs",
+        orgId as string,
+        "members",
+        email as string
+      );
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const data = userSnap.data(); // ← useState にセット
+        console.log(data);
+        setUserData(data);
+      }
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const userData = querySnapshot.docs[0].data();
+        console.log(userData);
+        setUserDataOrigin(userData);
+      }
+    };
+
+    fetchOrg();
+  }, [orgId]);
+
   return (
     <View style={styles.container}>
       {/* ── ヘッダー ──────────────────────────────── */}
@@ -33,24 +109,58 @@ export default function Menu({ onClose, userName, role, userIcon }: Props) {
         />
         <Text style={styles.userText}>
           {userName}
-          <Text style={{ fontWeight: "normal" }}>_{role}</Text>
+          <Text style={{ fontWeight: "normal" }}>
+            _{role === "admin" ? "管理者" : "メンバー"}
+          </Text>
         </Text>
 
         <Pressable style={styles.closeBtn} onPress={onClose}>
-          <Text style={{ fontSize: 24 }}>✕</Text>
+          <Text
+            style={{
+              fontSize: 24,
+              paddingHorizontal: 10,
+              paddingVertical: 7,
+              borderRadius: 10,
+              borderWidth: 1,
+              borderColor: "black",
+            }}
+          >
+            ✕
+          </Text>
         </Pressable>
 
-        <TouchableOpacity style={styles.profileBtn}>
+        <TouchableOpacity
+          style={styles.profileBtn}
+          onPress={() => {
+            router.push({
+              pathname: "/pages/profile",
+              params: {
+                editingFromMenu: "true", // 文字列渡しになるので注意
+                email: email,
+                orgId: orgId,
+              },
+            });
+            onClose(); // メニュー閉じる
+          }}
+        >
           <Text style={styles.profileBtnText}>プロフィール編集</Text>
         </TouchableOpacity>
       </View>
 
       {/* ── メニュー項目 ─────────────────────────── */}
       <ScrollView contentContainerStyle={styles.menu}>
-        <TouchableOpacity style={styles.item}>
+        <TouchableOpacity
+          style={styles.item}
+          onPress={() => {
+            router.push({
+              pathname: "/pages/orgprofile",
+              params: { orgId: orgId, role: role },
+            });
+          }}
+        >
           <Text style={styles.itemText}>組織情報</Text>
         </TouchableOpacity>
-        {role === "管理者" && (
+        {role === "admin" && (
           <>
             <TouchableOpacity style={styles.item}>
               <Text style={styles.itemText}>コネクション設定</Text>
@@ -60,9 +170,21 @@ export default function Menu({ onClose, userName, role, userIcon }: Props) {
             </TouchableOpacity>
           </>
         )}
-        {role === "メンバー" && (
+        {role === "member" && (
           <>
-            <TouchableOpacity style={styles.item}>
+            <TouchableOpacity
+              style={styles.item}
+              onPress={() => {
+                router.push({
+                  pathname: "/pages/collection",
+                  params: {
+                    myEmail: email,
+                    orgId: orgId,
+                  },
+                });
+                onClose(); // メニュー閉じる
+              }}
+            >
               <Text style={styles.itemText}>コネクション進捗</Text>
             </TouchableOpacity>
           </>
@@ -73,15 +195,70 @@ export default function Menu({ onClose, userName, role, userIcon }: Props) {
 
         {/* ── 組織選択 ─────────────────────── */}
         <View style={styles.orgBox}>
-          <Text style={styles.orgLabel}>Webデザイン科</Text>
-          <TouchableOpacity style={styles.orgSelect}>
+          <Text style={styles.orgLabel}>{orgName}</Text>
+
+          <TouchableOpacity
+            style={styles.orgSelect}
+            onPress={() => setModalVisible(true)}
+          >
             <Text style={styles.orgSelectText}>組織の選択 ▼</Text>
           </TouchableOpacity>
-        </View>
 
+          <Modal
+            visible={modalVisible}
+            transparent={true}
+            animationType="slide"
+          >
+            <View style={styles.modalBackground}>
+              <View style={styles.modalContent}>
+                {orgCandidates.map((org, index) => (
+                  <TouchableOpacity
+                    key={org.orgId}
+                    onPress={async () => {
+                      setOrgName(org.orgId); // or org.nameがあればそれ
+                      setSelectedOrgId(org.orgId);
+                      setModalVisible(false);
+                      const querySnapshot = await getDocs(q);
+                      if (!querySnapshot.empty) {
+                        const userDoc = querySnapshot.docs[0];
+                        const userRef = doc(db, "users", userDoc.id);
+
+                        await updateDoc(userRef, {
+                          orgNow: index, // ← 数字で渡す
+                          params: { orgIdNow: org.orgId }, // ← これ必須
+                        });
+                      }
+                      router.replace({
+                        pathname: "./.",
+                      });
+                    }}
+                    style={styles.modalItem}
+                  >
+                    <Text>
+                      {index + 1}：{org.name}　role：
+                      {role === "admin" ? "管理者" : "メンバー"}
+                    </Text>
+                    {/* org.name があればそっち使ってもOK */}
+                  </TouchableOpacity>
+                ))}
+                <TouchableOpacity onPress={() => setModalVisible(false)}>
+                  <Text>閉じる</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+        </View>
         {/* ── 設定 ───────────────────────── */}
-        <TouchableOpacity style={styles.item}>
-          <Text style={styles.itemText}>設定</Text>
+        <TouchableOpacity
+          style={styles.item}
+          onPress={() => {
+            router.push({
+              pathname: "./.",
+            });
+            handleLogout();
+          }}
+        >
+          <Text style={styles.itemText}>ログアウト</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -156,4 +333,21 @@ const styles = StyleSheet.create({
   orgLabel: { fontSize: 14, marginVertical: 4 },
   orgSelect: { marginTop: 8 },
   orgSelectText: { fontSize: 16, fontWeight: "600" },
+  modalBackground: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  modalContent: {
+    backgroundColor: "white",
+    padding: 20,
+    borderRadius: 10,
+    width: "80%",
+  },
+  modalItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ccc",
+  },
 });

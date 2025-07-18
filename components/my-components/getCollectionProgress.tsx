@@ -86,15 +86,41 @@ export async function getCollectionProgress(orgId: string, myEmail: string) {
   );
 
   return [
-    { name: "友達", current: friendsProgress, total: friendsTotal },
+    {
+      name: "友達",
+      current: friendsProgress,
+      total: friendsTotal,
+      per: friendsProgress / friendsTotal,
+    },
     {
       name: "誕生日",
       current: connectedBirthMonths.size,
       total: allBirthMonths.size,
+      per: connectedBirthMonths.size / allBirthMonths.size,
     },
-    { name: "星座", current: connectedZodiac.size, total: allZodiac.size },
-    { name: "mbti", current: connectedMbti.size, total: allMbti.size },
-    { name: "血液型", current: connectedBlood.size, total: allBlood.size },
-    { name: "出身国", current: connectedCountry.size, total: allCountry.size },
+    {
+      name: "星座",
+      current: connectedZodiac.size,
+      total: allZodiac.size,
+      per: connectedZodiac.size / allZodiac.size,
+    },
+    {
+      name: "mbti",
+      current: connectedMbti.size,
+      total: allMbti.size,
+      per: connectedMbti.size / allMbti.size,
+    },
+    {
+      name: "血液型",
+      current: connectedBlood.size,
+      total: allBlood.size,
+      per: connectedBlood.size / allBlood.size,
+    },
+    {
+      name: "出身国",
+      current: connectedCountry.size,
+      total: allCountry.size,
+      per: connectedCountry.size / allCountry.size,
+    },
   ];
 }

@@ -20,18 +20,31 @@ export default function UploadIcon({
   // 初期表示時、Firestoreからアイコンを取得
   useEffect(() => {
     const fetchIcon = async () => {
-      const userRef = doc(db, "orgs", org, "members", email);
-      const snap = await getDoc(userRef);
-      if (snap.exists()) {
-        const data = snap.data();
-        if (data.icon) {
-          setImageUri(data.icon);
+      if (email === "1") {
+        // 組織アイコンを取得
+        const orgRef = doc(db, "orgs", org);
+        const snap = await getDoc(orgRef);
+        if (snap.exists()) {
+          const data = snap.data();
+          if (data.imageUrl) {
+            setImageUri(data.imageUrl);
+          }
+        }
+      } else {
+        // メンバーアイコンを取得
+        const userRef = doc(db, "orgs", org, "members", email);
+        const snap = await getDoc(userRef);
+        if (snap.exists()) {
+          const data = snap.data();
+          if (data.icon) {
+            setImageUri(data.icon);
+          }
         }
       }
     };
 
     fetchIcon();
-  }, [email]);
+  }, [email, org]);
   // 画像選択
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -75,28 +88,51 @@ export default function UploadIcon({
 
   // Firebase保存
   const saveUrlToFirebase = async (url: string) => {
-    const userRef = doc(db, "orgs", "orgs_aw24", "members", email);
-    await updateDoc(userRef, {
-      icon: url,
-    });
-    console.log("✅ Firebase保存完了");
+    if (email === "1") {
+      // orgのアイコンを更新
+      const orgRef = doc(db, "orgs", org);
+      await updateDoc(orgRef, {
+        imageUrl: url,
+      });
+      console.log("✅ 組織アイコン保存完了");
+    } else {
+      // メンバーのアイコンを更新
+      const userRef = doc(db, "orgs", org, "members", email);
+      await updateDoc(userRef, {
+        icon: url,
+      });
+      console.log("✅ メンバーアイコン保存完了");
+    }
   };
 
   return (
-    <View style={styles.imageContainer}>
+    <View style={email !== "1" && styles.imageContainer}>
       <Pressable onPress={pickImage}>
-        <View style={styles.imageWrapper}>
+        {email === "1" ? (
           <Image
             source={
               imageUri
                 ? { uri: imageUri }
-                : require("../../assets/images/testicons.png")
+                : require("../../assets/images/classroom.png")
             }
-            style={styles.image}
+            style={styles.imageHeader}
           />
-          <View style={styles.ringOverlay} />
-        </View>
-        <Text style={styles.changePhoto}>写真を変更</Text>
+        ) : (
+          <>
+            <View style={styles.imageWrapper}>
+              <Image
+                source={
+                  imageUri
+                    ? { uri: imageUri }
+                    : require("../../assets/images/testicons.png")
+                }
+                style={styles.image}
+              />
+              <View style={styles.ringOverlay} />
+            </View>
+            <Text style={styles.changePhoto}>写真を変更</Text>
+          </>
+        )}
       </Pressable>
     </View>
   );
@@ -112,6 +148,12 @@ const styles = StyleSheet.create({
     padding: 3,
   },
   image: { width: 151, height: 184 },
+  imageHeader: {
+    width: "100%",
+    height: 150,
+    resizeMode: "cover",
+    marginTop: 40,
+  },
   changePhoto: {
     marginTop: 10,
     color: "#555",

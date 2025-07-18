@@ -1,14 +1,22 @@
 // icon.tsx （超適当なページ）
 import { useState } from "react";
-import { Image, Pressable, View } from "react-native";
+import { Image, Pressable, StyleSheet, View } from "react-native";
 import Menu from "./menu";
 type Props = {
   userIcon?: string; // 画像 URL（空ならテスト用アイコンを表示）
   role?: "admin" | "member"; // 役割
   userName?: string; // ユーザー名
+  email?: string;
+  orgId?: string;
 };
 
-export default function Icon({ userIcon, role, userName }: Props) {
+export default function Icon({
+  userIcon,
+  role,
+  userName,
+  email,
+  orgId,
+}: Props) {
   const [isMenuOpen, setMenuOpen] = useState(false);
   return (
     <View
@@ -24,15 +32,11 @@ export default function Icon({ userIcon, role, userName }: Props) {
       {isMenuOpen && (
         <Menu
           onClose={() => setMenuOpen(false)}
-          role={
-            role === "admin"
-              ? "管理者"
-              : role === "member"
-              ? "メンバー"
-              : undefined
-          }
+          role={role}
           userName={userName}
           userIcon={userIcon}
+          email={email}
+          orgId={orgId}
         />
       )}
       <Pressable
@@ -42,12 +46,21 @@ export default function Icon({ userIcon, role, userName }: Props) {
         <Image
           source={
             userIcon
-              ? { userIcon } // ← ユーザーアイコン
-              : require("../../assets/images/testicon.png") // ← デフォルト
+              ? { uri: userIcon }
+              : require("../../assets/images/icon.png")
           }
-          style={{ width: 80, height: 80, borderRadius: 40 }}
+          style={styles.logo}
         />
       </Pressable>
     </View>
   );
 }
+const styles = StyleSheet.create({
+  logo: {
+    width: 60,
+    height: 60,
+    borderRadius: 50,
+    top: 10,
+    left: 40,
+  },
+});

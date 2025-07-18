@@ -6,6 +6,7 @@ import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Button, Text, View } from "react-native";
 // @ts-ignore
+import { useLocalSearchParams } from "expo-router";
 import { auth, db } from "../lib/firebase";
 import AdminTop from "./pages/admin-top";
 //************************************************************本番用ログイン手段(google認証)***********************************************************//
@@ -51,7 +52,8 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [loadingAuth, setLoadingAuth] = useState(true);
   const router = useRouter();
-
+  const [orgNow, setorgNow] = useState<string | null>();
+  const { orgIdNow } = useLocalSearchParams<{ orgIdNow: string }>();
   // ★ 新規: 所属候補（orgId と role）
   const [orgCandidates, setOrgCandidates] = useState<
     { orgId: string; role: string }[]
@@ -106,8 +108,10 @@ export default function App() {
         const snap = await getDoc(docRef);
         if (snap.exists()) {
           const data = snap.data();
+
           setUserName(data.name || "名前未登録");
           setUserIcon(data.icon || "");
+          setorgNow(data.orgNow?.toString() || "0");
         } else {
           setUserName("名前未登録");
         }
@@ -122,6 +126,18 @@ export default function App() {
 
     return () => unsubscribe();
   }, []);
+  useEffect(() => {
+    if (!orgCandidates.length) return;
+
+    if (orgIdNow) {
+      setorgNow(orgIdNow);
+    } else if (orgNow !== undefined) {
+      const index = parseInt(orgNow ?? "0", 10);
+      if (!isNaN(index) && orgCandidates[index]) {
+        setorgNow(orgCandidates[index].orgId);
+      }
+    }
+  }, [orgCandidates, orgNow, orgIdNow]);
   const handleLogout = async () => {
     try {
       // @ts-ignore
@@ -135,15 +151,11 @@ export default function App() {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" color="#0000ff" />
-        <Text>認証状態を確認中...</Text>
+        {/* <Text>認証状態を確認中...</Text> */}
       </View>
     );
   }
-  const profile = {
-    userName,
-    userIcon,
-    role,
-  };
+
   return (
     <View style={{ height: "100%" }}>
       {userEmail ? (
@@ -154,6 +166,7 @@ export default function App() {
               userIcon={userIcon ?? undefined}
               role={role}
               userName={userName ?? undefined}
+              orgId={orgNow ?? ""}
             />
           ) : role === "pending_admin" ? (
             <Text>審査中画面です</Text>
@@ -162,6 +175,7 @@ export default function App() {
               userIcon={userIcon ?? undefined}
               role={role}
               userName={userName ?? undefined}
+              orgId={orgNow ?? ""}
             />
           ) : role === "none" ? (
             <>
@@ -181,7 +195,7 @@ export default function App() {
           ) : (
             <ActivityIndicator /> // role がまだ取得できていないとき
           )}
-          <Button title="ログアウト" onPress={handleLogout} />
+          {/* <Button title="ログアウト" onPress={handleLogout} /> */}
         </>
       ) : (
         <AuthScreen />

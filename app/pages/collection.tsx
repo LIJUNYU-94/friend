@@ -1,4 +1,5 @@
 // app/pages/collection.tsx
+import { batches } from "@/components/my-components/batches";
 import { getCollectionProgress } from "@/components/my-components/getCollectionProgress";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -12,14 +13,6 @@ import {
 } from "react-native";
 import { ProgressBar } from "react-native-paper";
 import PieChart from "react-native-pie-chart";
-const batches = [
-  { name: "birthday", icon: require("../../assets/images/testbatch.png") },
-  { name: "handshake", icon: require("../../assets/images/testbatch.png") },
-  { name: "home", icon: require("../../assets/images/testbatch.png") },
-  { name: "stars", icon: require("../../assets/images/testbatch.png") },
-  { name: "blood", icon: require("../../assets/images/testbatch.png") },
-  { name: "user", icon: require("../../assets/images/testbatch.png") },
-];
 
 type Props = { per: number };
 function ProgressCircle({ per }: Props) {
@@ -35,7 +28,7 @@ function ProgressCircle({ per }: Props) {
     </View>
   );
 }
-export default async function Collection() {
+export default function Collection() {
   const { orgId, myEmail } = useLocalSearchParams<{
     orgId: string;
     myEmail: string;
@@ -71,7 +64,7 @@ export default async function Collection() {
       <View style={styles.top}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => router.push("/")}
+          onPress={() => router.back()}
         >
           <Text style={styles.backText}>戻る</Text>
         </TouchableOpacity>
@@ -80,7 +73,13 @@ export default async function Collection() {
           {batches.map((batch, index) => (
             <Image
               key={index}
-              source={batch.icon}
+              source={
+                categories[index].per < 0.7
+                  ? batch.icon
+                  : categories[index].per < 1
+                  ? batch.iconup
+                  : batch.iconfin
+              }
               style={styles.batch}
               resizeMode="contain"
             />

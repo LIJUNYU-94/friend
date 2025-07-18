@@ -1,6 +1,8 @@
+import { batches } from "@/components/my-components/batches";
 import BeFriend from "@/components/my-components/beFriend";
 import { myFavorites, myIf } from "@/components/my-components/customize";
 import EditProfile from "@/components/my-components/editProfile";
+import { getCollectionProgress } from "@/components/my-components/getCollectionProgress";
 import ProfileField from "@/components/my-components/profileField";
 import { db } from "@/lib/firebase";
 import { useNavigation } from "@react-navigation/native";
@@ -56,15 +58,6 @@ const breakName = (name: string) => {
 };
 const expireAt = Date.now() + 2 * 60 * 1000; // 今から2分後（ミリ秒）
 
-const batches = [
-  { name: "birthday", icon: require("../../assets/images/testbatch.png") },
-  { name: "handshake", icon: require("../../assets/images/testbatch.png") },
-  { name: "home", icon: require("../../assets/images/testbatch.png") },
-  { name: "stars", icon: require("../../assets/images/testbatch.png") },
-  { name: "blood", icon: require("../../assets/images/testbatch.png") },
-  { name: "user", icon: require("../../assets/images/testbatch.png") },
-];
-
 const chunkArray = (arr: any[], size: number) => {
   const result = [];
   for (let i = 0; i < arr.length; i += size) {
@@ -76,7 +69,8 @@ const encodeKey = (email: string) => email.replace(/\./g, "__");
 
 export default function ProfilePage() {
   const navigation = useNavigation();
-  const { email, org, orgId, relation } = useLocalSearchParams(); // ルーターから渡されたメール
+  const { email, org, orgId, relation, editingFromMenu, role } =
+    useLocalSearchParams(); // ルーターから渡されたメール
   const myEmail = getAuth().currentUser?.email;
   const isMyProfile = email === myEmail;
   const [now, setNow] = useState<now | null>(null); //今のuser. 全体データから
@@ -84,7 +78,21 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [triggerSave, setTriggerSave] = useState(false); // 保存トリガー
   const [authWordOn, setAuthWordOn] = useState(false);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    const fetchProgress = async () => {
+      const data = await getCollectionProgress(
+        orgId as string,
+        myEmail as string
+      );
+      setCategories(data);
+      setLoading(false);
+    };
+
+    fetchProgress();
+  }, [orgId, myEmail]);
   const handleConnect = async () => {
     if (!orgId || !email || !myEmail) return;
 
@@ -128,6 +136,11 @@ export default function ProfilePage() {
       setAuthWordOn(true); // 他人のプロフィールの場合
     }
   };
+  // useEffect(() => {
+  //   if (editingFromMenu === "true") {
+  //     setIsEditing(true);
+  //   }
+  // }, [editingFromMenu]);
   useEffect(() => {
     if (!email) return;
 
@@ -175,40 +188,42 @@ export default function ProfilePage() {
     <ScrollView contentContainerStyle={styles.container}>
       {/* プロフィール上部 */}
       <View style={styles.subcontainer}>
-        <TouchableOpacity
-          style={{
-            position: "absolute",
-            top: 26,
-            right: 30,
-            borderRadius: 41,
-            width: 130,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            paddingVertical: 5,
-            backgroundColor: isEditing ? "#D9D9D9" : "white",
-          }}
-          onPress={handlePress}
-        >
-          {!isMyProfile && (
-            <Image
-              source={require("../../assets/images/handshake.png")}
-              style={{ width: 24, height: 24 }}
-            />
-          )}
-
-          <Text
-            style={[
-              styles.label,
-              {
-                textAlign: "center",
-                alignItems: "center",
-              },
-            ]}
+        {role == "member" && (
+          <TouchableOpacity
+            style={{
+              position: "absolute",
+              top: 26,
+              right: 30,
+              borderRadius: 41,
+              width: 130,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              paddingVertical: 5,
+              backgroundColor: isEditing ? "#D9D9D9" : "white",
+            }}
+            onPress={handlePress}
           >
-            {isMyProfile ? (isEditing ? "編集完了" : "編集") : "友達になる"}
-          </Text>
-        </TouchableOpacity>
+            {!isMyProfile && (
+              <Image
+                source={require("../../assets/images/handshake.png")}
+                style={{ width: 24, height: 24 }}
+              />
+            )}
+
+            <Text
+              style={[
+                styles.label,
+                {
+                  textAlign: "center",
+                  alignItems: "center",
+                },
+              ]}
+            >
+              {isMyProfile ? (isEditing ? "編集完了" : "編集") : "友達になる"}
+            </Text>
+          </TouchableOpacity>
+        )}
         {!isEditing && (
           <TouchableOpacity
             style={{
@@ -254,16 +269,29 @@ export default function ProfilePage() {
                       key={rowIndex}
                       style={[
                         styles.row,
-                        rowIndex % 2 === 1 && { marginLeft: 30 }, // 偶数行（index 1, 3, ...）に marginLeft
+                        rowIndex % 2 === 1 && { marginLeft: 30 },
                       ]}
                     >
-                      {row.map((batch, index) => (
-                        <Image
-                          key={index}
-                          source={batch.icon}
-                          style={styles.batch}
-                        />
-                      ))}
+                      {row.map((batch, index) => {
+                        const globalIndex = rowIndex * row.length + index;
+                        const category = categories[globalIndex];
+
+                        return (
+                          <Image
+                            key={index}
+                            source={
+                              category
+                                ? category.per < 0.7
+                                  ? batch.icon
+                                  : category.per < 1
+                                  ? batch.iconup
+                                  : batch.iconfin
+                                : batch.icon // categoryが無いときはデフォルトでbatch.icon表示
+                            }
+                            style={styles.batch}
+                          />
+                        );
+                      })}
                     </View>
                   ))}
                 </View>
@@ -382,10 +410,7 @@ export default function ProfilePage() {
                         </Text>
                         <ProfileField label="テーマ">
                           <Text
-                            style={[
-                              styles.profileText,
-                              { marginLeft: "10%", color: "black" },
-                            ]}
+                            style={[styles.profileText, { marginLeft: "10%" }]}
                           >
                             {user.myBest3.title}
                           </Text>
@@ -393,9 +418,7 @@ export default function ProfilePage() {
                         <ProfileField label="">
                           <Text numberOfLines={1} ellipsizeMode="tail">
                             <Text style={[styles.profileText]}>１：</Text>
-                            <Text
-                              style={[styles.profileText, { color: "black" }]}
-                            >
+                            <Text style={[styles.profileText]}>
                               {user.myBest3.first}
                             </Text>
                           </Text>
@@ -403,9 +426,7 @@ export default function ProfilePage() {
                         <ProfileField label="">
                           <Text numberOfLines={1} ellipsizeMode="tail">
                             <Text style={[styles.profileText]}>２：</Text>
-                            <Text
-                              style={[styles.profileText, { color: "black" }]}
-                            >
+                            <Text style={[styles.profileText]}>
                               {user.myBest3.second}
                             </Text>
                           </Text>
@@ -413,9 +434,7 @@ export default function ProfilePage() {
                         <ProfileField label="">
                           <Text numberOfLines={1} ellipsizeMode="tail">
                             <Text style={[styles.profileText]}>３：</Text>
-                            <Text
-                              style={[styles.profileText, { color: "black" }]}
-                            >
+                            <Text style={[styles.profileText]}>
                               {user.myBest3.third}
                             </Text>
                           </Text>
@@ -471,6 +490,7 @@ export default function ProfilePage() {
                                   numberOfLines={1}
                                   ellipsizeMode="tail"
                                   style={{
+                                    color: "#80590C",
                                     marginTop: 8,
                                     fontSize: 16,
                                     textAlign: "center",
@@ -523,33 +543,35 @@ export default function ProfilePage() {
                     </View>
                   )}
 
-                  <TouchableOpacity
-                    style={{
-                      alignSelf: "center",
-                      borderRadius: 29,
-                      width: 200,
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      paddingVertical: 5,
-                      backgroundColor: "#D9D9D9",
-                      marginVertical: 30,
-                    }}
-                    onPress={handlePress}
-                  >
-                    <Text
-                      style={[
-                        styles.label,
-                        {
-                          textAlign: "center",
-                          alignItems: "center",
-                          color: "black",
-                        },
-                      ]}
+                  {role == "member" && (
+                    <TouchableOpacity
+                      style={{
+                        alignSelf: "center",
+                        borderRadius: 29,
+                        width: 200,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        paddingVertical: 5,
+                        backgroundColor: "#D9D9D9",
+                        marginVertical: 30,
+                      }}
+                      onPress={handlePress}
                     >
-                      プロフィール編集
-                    </Text>
-                  </TouchableOpacity>
+                      <Text
+                        style={[
+                          styles.label,
+                          {
+                            textAlign: "center",
+                            alignItems: "center",
+                            color: "black",
+                          },
+                        ]}
+                      >
+                        {isMyProfile ? "プロフィール編集" : "友達になる"}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
                 </>
               ) : (
                 <View>

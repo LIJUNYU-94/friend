@@ -892,7 +892,7 @@ const EditProfile: React.FC<EditProfileProps> = ({
                     </View>
                   )}
                 </View>
-              ))}{" "}
+              ))}
             <TouchableOpacity
               style={{
                 alignSelf: "center",
