@@ -57,7 +57,43 @@ app.post("/start-authword-timer", async (req, res) => {
   timers.set(key, timeout);
   res.json({ status: "timer started or reset" });
 });
+app.post("/invite-member", async (req, res) => {
+  console.log("🔥 メンバー招待リクエスト:", req.body);
 
+  const { orgId, email, name } = req.body;
+
+  if (!orgId || !email || !name) {
+    return res.status(400).json({ error: "orgId, email, name は必須です" });
+  }
+
+  try {
+    // users に追加（emailをそのまま使える）
+    await db.collection("users").doc(email).set(
+      {
+        name,
+        email,
+        createdAt: new Date(),
+      },
+      { merge: true } // 既存でも上書きしない
+    );
+
+    // orgs/{orgId}/members に追加
+    await db
+      .collection("orgs")
+      .doc(orgId)
+      .collection("members")
+      .doc(email)
+      .set({
+        role: "pending",
+      });
+
+    console.log(`✔️ ${email} を orgs/${orgId}/members に追加しました`);
+    res.json({ status: "success" });
+  } catch (err) {
+    console.error("✘ 招待失敗:", err);
+    res.status(500).json({ error: "招待に失敗しました" });
+  }
+});
 // サーバー起動
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {

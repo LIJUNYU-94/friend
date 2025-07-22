@@ -162,10 +162,32 @@ export default function Menu({
         </TouchableOpacity>
         {role === "admin" && (
           <>
-            <TouchableOpacity style={styles.item}>
-              <Text style={styles.itemText}>コネクション設定</Text>
+            <TouchableOpacity
+              style={styles.item}
+              onPress={() => {
+                router.push({
+                  pathname: "/pages/hobbysetting",
+                  params: {
+                    email: email,
+                    orgId: orgId,
+                    role: role,
+                  },
+                });
+              }}
+            >
+              <Text style={styles.itemText}>趣味項目設定</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.item}>
+            <TouchableOpacity
+              style={styles.item}
+              onPress={() => {
+                router.push({
+                  pathname: "/pages/memberinvite",
+                  params: {
+                    orgId: orgId,
+                  },
+                });
+              }}
+            >
               <Text style={styles.itemText}>メンバー招待</Text>
             </TouchableOpacity>
           </>
@@ -178,8 +200,9 @@ export default function Menu({
                 router.push({
                   pathname: "/pages/collection",
                   params: {
-                    myEmail: email,
+                    Email: email,
                     orgId: orgId,
+                    role: role,
                   },
                 });
                 onClose(); // メニュー閉じる
