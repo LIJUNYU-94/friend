@@ -36,11 +36,14 @@ export default function MemberInvite() {
       try {
         console.log("🚀 API呼び出し開始");
 
-        await axios.post("https://your-railway-url/invite-member", {
-          orgId: orgId,
-          email: emailToAdd,
-          name: nameInput,
-        });
+        await axios.post(
+          "https://friend-production.up.railway.app/invite-member",
+          {
+            orgId: orgId,
+            email: emailToAdd,
+            name: nameInput,
+          }
+        );
 
         console.log("✅ API呼び出し成功");
       } catch (err) {

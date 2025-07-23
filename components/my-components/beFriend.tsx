@@ -130,13 +130,13 @@ export default function BeFriend({
           {/* Step 1 */}
           <View style={styles.stepBox}>
             <Text style={styles.stepLabel}>step1</Text>
-            <Text style={styles.stepText}>友達にパスワードを聞きましょう</Text>
+            <Text style={styles.stepText}>友達に認証番号を聞きましょう</Text>
           </View>
 
           {/* Step 2 */}
           <View style={styles.stepBox}>
             <Text style={styles.stepLabel}>step2</Text>
-            <Text style={styles.stepText}>パスワードを入力してください</Text>
+            <Text style={styles.stepText}>認証番号を入力してください</Text>
             <View style={styles.inputRow}>
               {password.map((value, idx) => (
                 <TextInput
