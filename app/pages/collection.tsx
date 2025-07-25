@@ -74,11 +74,13 @@ export default function Collection() {
             <Image
               key={index}
               source={
-                categories[index].per < 0.7
+                categories[index].per < 0.5
                   ? batch.icon
+                  : categories[index].per < 0.75
+                  ? batch.icon50
                   : categories[index].per < 1
-                  ? batch.iconup
-                  : batch.iconfin
+                  ? batch.icon70
+                  : batch.icon100
               }
               style={styles.batch}
               resizeMode="contain"
@@ -120,6 +122,7 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: "#FFF4E2",
     padding: 10,
+    paddingTop: 80,
     alignItems: "center",
   },
   backButton: {

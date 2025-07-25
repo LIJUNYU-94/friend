@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 50,
-    top: 10,
+    top: 60,
     left: 40,
   },
 });

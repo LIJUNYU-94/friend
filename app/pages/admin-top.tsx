@@ -5,6 +5,7 @@ import { router } from "expo-router";
 import { getAuth } from "firebase/auth";
 import {
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -17,6 +18,7 @@ import {
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Image,
   Pressable,
@@ -58,6 +60,7 @@ const breakName = (name: string) => {
 
   return name; // それ以外はそのまま
 };
+
 const sortOptions = [
   { label: "番号順", value: "num" },
   { label: "お気に入り", value: "star" },
@@ -72,21 +75,45 @@ export default function AdminTop({ userIcon, role, userName, orgId }: Props) {
   const [connectedCount, setConnectedCount] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   //管理者専用：
+  const [showDelete, setShowDelete] = useState(false);
   //ユーザー専用：
   const [icon, setIcon] = useState(userIcon);
   const userColumns = 2;
   const myEmail = getAuth().currentUser?.email;
   const [myStars, setMyStars] = useState<Record<string, string>>({});
   const [org, setOrg] = useState("");
-  const orgRef = doc(db, "orgs", orgId as string);
   const encodeKey = (email: string): string => email.replace(/\./g, "__");
+
+  const orgRef = doc(db, "orgs", orgId as string);
   getDoc(orgRef).then((docSnap) => {
     if (docSnap.exists()) {
       const data = docSnap.data();
       setOrg(data.name);
     }
   });
+  const removeMember = async (targetEmail: string) => {
+    if (!orgId || !targetEmail) return;
 
+    try {
+      // Firestoreから対象メンバーを削除
+      await deleteDoc(doc(db, "orgs", orgId, "members", targetEmail));
+      console.log(`Deleted member: ${targetEmail}`);
+    } catch (error) {
+      console.error("削除に失敗:", error);
+    }
+  };
+
+  // useEffect(() => {
+  //   if (!orgId) return;
+
+  //   const orgRef = doc(db, "orgs", orgId);
+  //   getDoc(orgRef).then((docSnap) => {
+  //     if (docSnap.exists()) {
+  //       const data = docSnap.data();
+  //       setOrg(data.name);
+  //     }
+  //   });
+  // }, [orgId]);
   //useStateで並び順管理
   const [sortOrder, setSortOrder] = useState<
     "num" | "star" | "connect" | "process" //番号順、星？、繋がり？完成度？
@@ -371,13 +398,21 @@ export default function AdminTop({ userIcon, role, userName, orgId }: Props) {
             <Text
               style={[styles.mark, { right: 10, backgroundColor: "white" }]}
             >
-              {connectionStatus === "connected" && "✔︎"}
+              {connectionStatus === "connected" && (
+                <Image source={require("../../assets/images/checkmark.png")} />
+              )}
             </Text>
             <Text style={[styles.mark, { left: 10 }]}>
               {
                 <TouchableOpacity onPress={() => toggleStar(item.id)}>
                   <Text style={{ fontSize: 18 }}>
-                    {didIStar(item.id) ? "★" : "☆"}
+                    {didIStar(item.id) ? (
+                      <Image
+                        source={require("../../assets/images/stared.png")}
+                      />
+                    ) : (
+                      <Image source={require("../../assets/images/star.png")} />
+                    )}
                   </Text>
                 </TouchableOpacity>
               }
@@ -414,9 +449,37 @@ export default function AdminTop({ userIcon, role, userName, orgId }: Props) {
             </Text>
           )}
         </View>
-        {/* <Pressable onPress={() => removeMember(item.id)}>
-        <Text>🗑</Text>
-      </Pressable> */}
+        {role === "admin" && showDelete && (
+          <Pressable
+            onPress={() =>
+              Alert.alert(
+                "メンバー削除の確認",
+                "本当にこのメンバーを削除しますか？",
+                [
+                  { text: "キャンセル", style: "cancel" },
+                  {
+                    text: "削除する",
+                    style: "destructive",
+                    onPress: () => removeMember(item.id),
+                  },
+                ]
+              )
+            }
+          >
+            <Text
+              style={{
+                borderRadius: 25,
+                borderWidth: 1,
+                backgroundColor: "white",
+                color: "#453577ff",
+                paddingHorizontal: 3,
+                paddingVertical: 2,
+              }}
+            >
+              ー
+            </Text>
+          </Pressable>
+        )}
       </View>
       // </Pressable>
     );
@@ -440,8 +503,11 @@ export default function AdminTop({ userIcon, role, userName, orgId }: Props) {
             email={myEmail ?? ""}
             orgId={orgId}
           />
-          <Text style={styles.title}>参加メンバーの管理</Text>
-
+          <Pressable onPress={() => setShowDelete((prev) => !prev)}>
+            <Text style={[styles.title, { marginTop: 20 }]}>
+              参加メンバーの管理
+            </Text>
+          </Pressable>
           <FlatList
             style={{ flex: 1 }}
             data={users}
@@ -452,7 +518,7 @@ export default function AdminTop({ userIcon, role, userName, orgId }: Props) {
         </SafeAreaView>
       )}
       {role === "member" && (
-        <ScrollView style={styles.container}>
+        <ScrollView style={[styles.container]}>
           <Icon
             userIcon={userIcon}
             role={role}
@@ -460,7 +526,7 @@ export default function AdminTop({ userIcon, role, userName, orgId }: Props) {
             email={myEmail ?? ""}
             orgId={orgId}
           />
-          <View style={styles.header}>
+          <View style={[styles.header, { paddingTop: 50 }]}>
             {/* <Image
               source={require("../../assets/images/icon.png")}
               style={styles.logo}
@@ -504,7 +570,7 @@ export default function AdminTop({ userIcon, role, userName, orgId }: Props) {
             onPress={() =>
               router.push({
                 pathname: "/pages/profile",
-                params: { email: myEmail, org: org, orgId: orgId }, // ← 自分のプロフィール
+                params: { email: myEmail, org: org, orgId: orgId, role: role }, // ← 自分のプロフィール
               })
             }
           >

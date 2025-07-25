@@ -124,7 +124,7 @@ export default function UploadIcon({
                 source={
                   imageUri
                     ? { uri: imageUri }
-                    : require("../../assets/images/testicons.png")
+                    : require("../../assets/images/testicon.png")
                 }
                 style={styles.image}
               />

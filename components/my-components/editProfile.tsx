@@ -302,7 +302,7 @@ const EditProfile: React.FC<EditProfileProps> = ({
     }
   };
   useEffect(() => {
-    setImageUri(require("../../assets/images/testicons.png"));
+    setImageUri(require("../../assets/images/testicon.png"));
   }, []);
   useEffect(() => {
     const orgIdStr = Array.isArray(orgId) ? orgId[0] : orgId;

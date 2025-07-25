@@ -17,7 +17,6 @@ import {
   Image,
   Modal,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -46,10 +45,13 @@ export default function Menu({
   const [selectedOrgId, setSelectedOrgId] = useState<string | null>(
     orgId || null
   );
+  const [currentRole, setCurrentRole] = useState<"admin" | "member">(role!); // 初期値は props の role
   const [modalVisible, setModalVisible] = useState(false);
   const [userData, setUserData] = useState<any>(null); //memberから
   const [userDataOrigin, setUserDataOrigin] = useState<any>(null); //usersから
   const { orgCandidates, loading } = useOrgCandidates(email || "");
+  const [adminjoin, setAdminjoin] = useState(false);
+  const [icon, setIcon] = useState("");
   const q = query(collection(db, "users"), where("email", "==", email));
   const handleLogout = async () => {
     try {
@@ -59,6 +61,23 @@ export default function Menu({
       router.replace("/"); // TOPページに強制遷移（戻る不可）
     } catch (error) {
       console.error("ログアウト失敗:", error);
+    }
+  };
+  const handleChangeRole = async () => {
+    if (!orgId || !email) return;
+
+    const userRef = doc(db, "orgs", orgId, "members", email);
+    const newRole = currentRole === "admin" ? "member" : "admin";
+
+    try {
+      await updateDoc(userRef, {
+        role: newRole,
+      });
+      setCurrentRole(newRole); // ローカル状態を更新
+      router.replace("/");
+      console.log(`ロールを ${newRole} に変更しました`);
+    } catch (err) {
+      console.error("ロール変更失敗:", err);
     }
   };
   useEffect(() => {
@@ -80,21 +99,27 @@ export default function Menu({
       const userSnap = await getDoc(userRef);
       if (userSnap.exists()) {
         const data = userSnap.data(); // ← useState にセット
-        console.log(data);
         setUserData(data);
+        if (data.icon) {
+          setIcon(data.icon);
+        }
+        // 🔽 ここが追加部分
+        if (data.adminjoin === "yes") {
+          setAdminjoin(true);
+        } else {
+          setAdminjoin(false);
+        }
       }
       const querySnapshot = await getDocs(q);
 
       if (!querySnapshot.empty) {
         const userData = querySnapshot.docs[0].data();
-        console.log(userData);
         setUserDataOrigin(userData);
       }
     };
 
     fetchOrg();
   }, [orgId]);
-
   return (
     <View style={styles.container}>
       {/* ── ヘッダー ──────────────────────────────── */}
@@ -102,8 +127,8 @@ export default function Menu({
         <Image
           style={styles.icon}
           source={
-            userIcon
-              ? { userIcon } // ← ユーザーアイコン
+            icon
+              ? { uri: icon } // ← ユーザーアイコン
               : require("../../assets/images/testicon.png") // ← デフォルト
           }
         />
@@ -129,26 +154,29 @@ export default function Menu({
           </Text>
         </Pressable>
 
-        <TouchableOpacity
-          style={styles.profileBtn}
-          onPress={() => {
-            router.push({
-              pathname: "/pages/profile",
-              params: {
-                editingFromMenu: "true", // 文字列渡しになるので注意
-                email: email,
-                orgId: orgId,
-              },
-            });
-            onClose(); // メニュー閉じる
-          }}
-        >
-          <Text style={styles.profileBtnText}>プロフィール編集</Text>
-        </TouchableOpacity>
+        {role === "member" && (
+          <TouchableOpacity
+            style={styles.profileBtn}
+            onPress={() => {
+              router.push({
+                pathname: "/pages/profile",
+                params: {
+                  editingFromMenu: "true", // 文字列渡しになるので注意
+                  email: email,
+                  orgId: orgId,
+                  role: role,
+                },
+              });
+              onClose(); // メニュー閉じる
+            }}
+          >
+            <Text style={styles.profileBtnText}>プロフィール編集</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* ── メニュー項目 ─────────────────────────── */}
-      <ScrollView contentContainerStyle={styles.menu}>
+      <View style={styles.menu}>
         <TouchableOpacity
           style={styles.item}
           onPress={() => {
@@ -200,7 +228,7 @@ export default function Menu({
                 router.push({
                   pathname: "/pages/collection",
                   params: {
-                    Email: email,
+                    myEmail: email,
                     orgId: orgId,
                     role: role,
                   },
@@ -247,8 +275,7 @@ export default function Menu({
                         const userRef = doc(db, "users", userDoc.id);
 
                         await updateDoc(userRef, {
-                          orgNow: index, // ← 数字で渡す
-                          params: { orgIdNow: org.orgId }, // ← これ必須
+                          orgNow: index,
                         });
                       }
                       router.replace({
@@ -272,18 +299,38 @@ export default function Menu({
           </Modal>
         </View>
         {/* ── 設定 ───────────────────────── */}
-        <TouchableOpacity
-          style={styles.item}
-          onPress={() => {
-            router.push({
-              pathname: "./.",
-            });
-            handleLogout();
-          }}
-        >
-          <Text style={styles.itemText}>ログアウト</Text>
-        </TouchableOpacity>
-      </ScrollView>
+        <View style={{ position: "absolute", left: 30, bottom: 0 }}>
+          <TouchableOpacity
+            style={styles.item}
+            onPress={() => {
+              handleChangeRole();
+            }}
+          >
+            {adminjoin && currentRole === "admin" && (
+              <TouchableOpacity style={styles.item} onPress={handleChangeRole}>
+                <Text style={styles.itemText}>参加モードに切り替え</Text>
+              </TouchableOpacity>
+            )}
+
+            {adminjoin && currentRole === "member" && (
+              <TouchableOpacity style={styles.item} onPress={handleChangeRole}>
+                <Text style={styles.itemText}>管理モードに切り替え</Text>
+              </TouchableOpacity>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.item}
+            onPress={() => {
+              router.push({
+                pathname: "./.",
+              });
+              handleLogout();
+            }}
+          >
+            <Text style={styles.itemText}>ログアウト</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </View>
   );
 }
@@ -292,11 +339,12 @@ const styles = StyleSheet.create({
   container: {
     width: "85%", // スライドメニュー幅
     backgroundColor: "#fff",
-    height: "100%",
+    height: "113%",
     position: "absolute",
     top: 0,
     left: 0,
     zIndex: 5,
+    borderTopRightRadius: 20,
   },
   header: {
     paddingTop: 50,
@@ -336,8 +384,8 @@ const styles = StyleSheet.create({
   },
 
   /* menu list */
-  menu: { paddingHorizontal: 24, paddingBottom: 40 },
-  item: { paddingVertical: 18 },
+  menu: { paddingHorizontal: 24, paddingBottom: 40, height: 600 },
+  item: { paddingVertical: 15 },
   itemText: { fontSize: 16 },
   divider: {
     height: 1,

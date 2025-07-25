@@ -132,7 +132,7 @@ export default function HobbySetting() {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "#FFF4E2",
-    paddingTop: 40,
+    paddingTop: 100,
     height: "100%",
   },
   title: {

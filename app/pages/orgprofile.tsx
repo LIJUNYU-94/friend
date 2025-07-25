@@ -215,7 +215,7 @@ export default function OrgProfile() {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "#FFF4E2",
-    paddingTop: 40,
+    paddingTop: 100,
   },
   pageTitle: {
     color: "#aaa",

@@ -31,6 +31,7 @@
     "expo-splash-screen": "^0.30.10",
     "expo-status-bar": "~2.2.3",
     "expo-symbols": "~0.4.4",
+    "expo-updates": "^0.28.17",
     "expo-web-browser": "~14.1.6",
     "firebase": "^11.9.0",
     "firebase-admin": "^13.4.0",

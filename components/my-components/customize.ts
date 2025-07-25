@@ -33,4 +33,6 @@ export const myFavorites = [
 export const myIf = [
   { id: "if0", name: "100万円使えたら？" },
   { id: "if1", name: "一年間休めるなら何をしたい？" },
+  { id: "if2", name: "生まれ変わるなら何になりたい？" },
+  { id: "if3", name: "願い事が何でも一つ叶うなら？" },
 ];

@@ -258,7 +258,7 @@ export default function ProfilePage() {
                 source={
                   now?.icon || user?.icon
                     ? { uri: now?.icon || user?.icon } // ← ユーザーアイコン
-                    : require("../../assets/images/testicons.png") // ← デフォルト
+                    : require("../../assets/images/testicon.png") // ← デフォルト
                 }
                 style={styles.avatar}
               />
@@ -281,11 +281,13 @@ export default function ProfilePage() {
                             key={index}
                             source={
                               category
-                                ? category.per < 0.7
+                                ? category.per < 0.5
                                   ? batch.icon
+                                  : category.per < 0.75
+                                  ? batch.icon50
                                   : category.per < 1
-                                  ? batch.iconup
-                                  : batch.iconfin
+                                  ? batch.icon70
+                                  : batch.icon100
                                 : batch.icon // categoryが無いときはデフォルトでbatch.icon表示
                             }
                             style={styles.batch}
@@ -634,6 +636,7 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: "#FFF4e2",
     paddingVertical: 40,
+    paddingTop: 100,
   },
   subcontainer: {
     backgroundColor: "#FFebc2",

@@ -1,5 +1,7 @@
+import { db } from "@/lib/firebase";
 import axios from "axios";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
+import { collection, getDocs } from "firebase/firestore";
 import { useState } from "react";
 import {
   StyleSheet,
@@ -26,16 +28,24 @@ export default function MemberInvite() {
     } else {
       emailToAdd = emailInput;
     }
-
+    const snapshot = await getDocs(collection(db, "orgs", orgId, "members"));
+    const existingIds = snapshot.docs.map((doc) => doc.id);
+    console.log(existingIds);
+    if (existingIds.includes(emailToAdd)) {
+      setEmailInput("");
+      setNameInput("");
+      alert("すでに組織にいるよ！");
+      return;
+    }
     if (emailToAdd && nameInput) {
       const newMember: Member = {
         name: nameInput,
         email: emailToAdd,
       };
       setMemberList((prev) => [...prev, newMember]);
-      try {
-        console.log("🚀 API呼び出し開始");
+      // 既存メンバーのID一覧を取得
 
+      try {
         await axios.post(
           "https://friend-production.up.railway.app/invite-member",
           {
@@ -44,10 +54,10 @@ export default function MemberInvite() {
             name: nameInput,
           }
         );
-
-        console.log("✅ API呼び出し成功");
-      } catch (err) {
+        alert(`${nameInput} さんに招待を送りました`);
+      } catch (err: any) {
         console.error("❌ 招待API失敗:", err);
+        alert("招待中にエラーが発生しました");
       }
 
       setEmailInput("");
@@ -112,7 +122,7 @@ export default function MemberInvite() {
         />
       </View>
 
-      <TouchableOpacity style={styles.nextButton}>
+      <TouchableOpacity style={styles.nextButton} onPress={() => router.back()}>
         <Text style={styles.nextButtonText}>次へ</Text>
       </TouchableOpacity>
     </View>
@@ -122,7 +132,7 @@ export default function MemberInvite() {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "#FFF4E2",
-    paddingTop: "10%",
+    paddingTop: 100,
     paddingHorizontal: 20,
     height: "100%",
   },
