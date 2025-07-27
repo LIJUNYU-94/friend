@@ -2,7 +2,7 @@
 const express = require("express");
 const cors = require("cors");
 const admin = require("firebase-admin");
-
+const { doc, setDoc, serverTimestamp } = require("firebase/firestore"); // ←ここ追加
 const app = express();
 app.use(cors());
 app.use(express.json());
