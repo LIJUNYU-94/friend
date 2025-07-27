@@ -59,10 +59,11 @@ app.post("/start-authword-timer", async (req, res) => {
 app.post("/create-member", async (req, res) => {
   try {
     const { orgId, email, name, role } = req.body;
+    const authword = Math.floor(100000 + Math.random() * 900000).toString(); // 6桁のランダム数字文字列
 
     const memberRef = db.doc(`orgs/${orgId}/members/${email}`);
     await memberRef.set({
-      name,
+      authword,
       role,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
