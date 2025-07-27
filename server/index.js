@@ -2,7 +2,6 @@
 const express = require("express");
 const cors = require("cors");
 const admin = require("firebase-admin");
-const { doc, setDoc, serverTimestamp } = require("firebase/firestore"); // ←ここ追加
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -58,20 +57,20 @@ app.post("/start-authword-timer", async (req, res) => {
   res.json({ status: "timer started or reset" });
 });
 app.post("/create-member", async (req, res) => {
-  const { email, name, orgId, role } = req.body;
-
   try {
-    const memberRef = doc(db, "orgs", orgId, "members", email); // ← email に . 含んでもOK（Node.js側なら）
-    await setDoc(memberRef, {
+    const { orgId, email, name, role } = req.body;
+
+    const memberRef = db.doc(`orgs/${orgId}/members/${email}`);
+    await memberRef.set({
       name,
       role,
-      createdAt: serverTimestamp(),
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    res.status(200).json({ message: "メンバー登録成功" });
-  } catch (err) {
-    console.error("登録エラー:", err);
-    res.status(500).json({ error: "サーバーエラー" });
+    res.status(200).json({ message: "Member registered successfully" });
+  } catch (error) {
+    console.error("登録エラー:", error);
+    res.status(500).json({ error: error.message });
   }
 });
 app.post("/invite-member", async (req, res) => {
