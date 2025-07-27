@@ -3,7 +3,14 @@ import { useGoogleLogin } from "@/components/my-components/useGoogleLogin";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { collection, doc, getDoc, getDocs } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  serverTimestamp,
+  setDoc,
+} from "firebase/firestore";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -11,6 +18,7 @@ import {
   Image,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -83,6 +91,43 @@ function AuthScreen() {
     </View>
   );
 }
+function NameRegister({ userEmail }: { userEmail: string }) {
+  const [name, setName] = useState("");
+  const router = useRouter();
+
+  const handleRegister = async () => {
+    const user = auth.currentUser;
+    if (!user || !user.email) return;
+
+    await setDoc(doc(db, "users", user.uid), {
+      name,
+      email: user.email,
+      updatedAt: serverTimestamp(),
+    });
+
+    router.replace("/"); // 登録完了 → index.tsx へ戻る
+  };
+
+  return (
+    <View style={{ flex: 1, justifyContent: "center", padding: 20 }}>
+      <Text>初めまして！{userEmail}さん</Text>
+      <Text>お名前を入力してください</Text>
+      <TextInput
+        value={name}
+        onChangeText={setName}
+        placeholder="お名前"
+        style={{
+          borderColor: "#ccc",
+          borderWidth: 1,
+          padding: 10,
+          marginTop: 10,
+        }}
+      />
+      <Button title="登録する" onPress={handleRegister} disabled={!name} />
+    </View>
+  );
+}
+
 export default function App() {
   //初回起動のチェック
   const [firstLaunchChecked, setFirstLaunchChecked] = useState(false);
@@ -121,6 +166,9 @@ export default function App() {
   const [orgCandidates, setOrgCandidates] = useState<
     { orgId: string; role: string }[]
   >([]); //matchesのデータを保存する
+  const [selectedRole, setSelectedRole] = useState<"admin" | "member" | null>(
+    null
+  );
   useEffect(() => {
     if (firstLaunchChecked && isFirstLaunch) {
       router.replace("/pages/guide");
@@ -237,24 +285,84 @@ export default function App() {
             />
           ) : role === "pending_admin" ? (
             <Text>審査中画面です</Text>
-          ) : role === "none" ? (
+          ) : role === "none" && userName === "名前未登録" ? (
             <>
-              <Text>{userName}さん、未所属</Text>
-              <Text>組織招待0件あります</Text>
-              {/* ここの0は招待件数から持ってくる */}
-              <Button
-                title="招待をチェック"
-                onPress={() => router.push("/pages/view-invite")}
-              />
-              <Text>管理者として組織登録したいなら</Text>
-              <Button
-                title="組織を作成"
-                onPress={() => router.push("/pages/create-org")}
-              />
+              <NameRegister userEmail={userEmail} />
               <Button title="ログアウト" onPress={handleLogout} />
             </>
           ) : (
-            <ActivityIndicator /> // role がまだ取得できていないとき
+            role === "none" && (
+              <View
+                style={{
+                  flex: 1,
+                  backgroundColor: "#FFF4E2",
+                  alignItems: "center",
+                  paddingTop: 80,
+                  paddingHorizontal: 20,
+                }}
+              >
+                <Text style={{ fontSize: 18, color: "#999", marginBottom: 20 }}>
+                  役割選択
+                </Text>
+
+                <TouchableOpacity
+                  style={[
+                    styles.card,
+                    selectedRole === "admin" && styles.cardSelected,
+                  ]}
+                  onPress={() => setSelectedRole("admin")}
+                >
+                  <Text style={styles.cardText}>組織管理者</Text>
+                </TouchableOpacity>
+
+                {/* メンバーカード */}
+                <TouchableOpacity
+                  style={[
+                    styles.card,
+                    selectedRole === "member" && styles.cardSelected,
+                  ]}
+                  onPress={() => setSelectedRole("member")}
+                >
+                  <Text style={styles.cardText}>組織メンバー</Text>
+                </TouchableOpacity>
+
+                {/* 決定ボタン */}
+                <TouchableOpacity
+                  style={[
+                    styles.button,
+                    selectedRole ? styles.buttonEnabled : styles.buttonDisabled,
+                  ]}
+                  disabled={!selectedRole}
+                  onPress={() => {
+                    if (!selectedRole) return;
+
+                    const nextPage =
+                      selectedRole === "admin"
+                        ? "/pages/create-org"
+                        : "/pages/view-invite";
+
+                    router.replace({
+                      pathname: nextPage,
+                      params: {
+                        userName,
+                        userEmail,
+                      },
+                    });
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.buttonText,
+                      selectedRole
+                        ? styles.buttonTextEnabled
+                        : styles.buttonTextDisabled,
+                    ]}
+                  >
+                    この役割で進める
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )
           )}
           {/* <Button title="ログアウト" onPress={handleLogout} /> */}
         </>
@@ -285,5 +393,45 @@ const styles = StyleSheet.create({
     fontSize: 32,
     top: 170,
     letterSpacing: 2.5,
+  },
+  card: {
+    width: "75%",
+    aspectRatio: 1,
+    backgroundColor: "#FFEBC2",
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    marginVertical: 10,
+  },
+  cardSelected: {
+    backgroundColor: "#FFD78D",
+  },
+  cardText: {
+    fontSize: 18,
+    color: "#533B08",
+  },
+  button: {
+    marginTop: 30,
+    borderRadius: 25,
+    paddingVertical: 15,
+    paddingHorizontal: 50,
+  },
+  buttonDisabled: {
+    backgroundColor: "#ffffff",
+    borderColor: "#333",
+    borderWidth: 1,
+  },
+  buttonEnabled: {
+    backgroundColor: "#0047FF",
+  },
+  buttonText: {
+    fontSize: 16,
+    textAlign: "center",
+  },
+  buttonTextDisabled: {
+    color: "#333",
+  },
+  buttonTextEnabled: {
+    color: "#fff",
   },
 });

@@ -1,5 +1,9 @@
 {
   "ios": {
     "bundleIdentifier": "com.anonymous.server"
+  },
+  "android": {
+    "package": "com.team11.friendconnection",
+    "googleServicesFile": "./android/app/google-services.json"
   }
 }

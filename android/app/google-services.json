@@ -14,11 +14,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "266017925446-di03svkvsqojbjgbv7q5ll5q7kgob65l.apps.googleusercontent.com",
+          "client_id": "266017925446-caea7m48j4ms451v195uio235f6s8qr3.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.team11.friendconnection",
-            "certificate_hash": "993ccfd96e9e860fa512bea0e1bc423fff7f0ec7"
+            "certificate_hash": "8394637ae59f25d28a12227a5c8413ef75830a6e"
           }
         },
         {

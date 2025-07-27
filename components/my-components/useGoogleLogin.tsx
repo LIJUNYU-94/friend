@@ -15,13 +15,15 @@ export function useGoogleLogin() {
     iosClientId:
       "266017925446-etdvsflt21n3rs5sbvhcf9d5m7bk7afh.apps.googleusercontent.com",
     androidClientId:
-      "266017925446-di03svkvsqojbjgbv7q5ll5q7kgob65l.apps.googleusercontent.com",
+      "266017925446-caea7m48j4ms451v195uio235f6s8qr3.apps.googleusercontent.com",
     webClientId:
       "266017925446-u2pcs8mfomg1mgqjte3taprv5qe76b64.apps.googleusercontent.com",
     scopes: ["openid", "profile", "email"],
   });
   console.log("responseは", response);
   useEffect(() => {
+    console.log("🪪 authentication.idToken:", response);
+
     if (response?.type === "success") {
       const { authentication } = response;
       if (authentication?.idToken) {

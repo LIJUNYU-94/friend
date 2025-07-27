@@ -80,7 +80,7 @@ def enableProguardInReleaseBuilds = (findProperty('android.enableProguardInRelea
  * this variant is about 6MiB larger per architecture than default.
  */
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
-
+apply plugin: 'com.google.gms.google-services'
 android {
     ndkVersion rootProject.ext.ndkVersion
 

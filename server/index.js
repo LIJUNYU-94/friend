@@ -57,6 +57,23 @@ app.post("/start-authword-timer", async (req, res) => {
   timers.set(key, timeout);
   res.json({ status: "timer started or reset" });
 });
+app.post("/create-member", async (req, res) => {
+  const { email, name, orgId, role } = req.body;
+
+  try {
+    const memberRef = doc(db, "orgs", orgId, "members", email); // ← email に . 含んでもOK（Node.js側なら）
+    await setDoc(memberRef, {
+      name,
+      role,
+      createdAt: serverTimestamp(),
+    });
+
+    res.status(200).json({ message: "メンバー登録成功" });
+  } catch (err) {
+    console.error("登録エラー:", err);
+    res.status(500).json({ error: "サーバーエラー" });
+  }
+});
 app.post("/invite-member", async (req, res) => {
   console.log("🔥 メンバー招待リクエスト:", req.body);
 
