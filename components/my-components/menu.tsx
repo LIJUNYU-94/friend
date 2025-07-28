@@ -144,13 +144,14 @@ export default function Menu({
             style={{
               fontSize: 24,
               paddingHorizontal: 10,
-              paddingVertical: 7,
+              paddingTop: 3,
+              paddingBottom: 4.5,
               borderRadius: 10,
               borderWidth: 1,
               borderColor: "black",
             }}
           >
-            ✕
+            ×
           </Text>
         </Pressable>
 

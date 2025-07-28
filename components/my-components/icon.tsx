@@ -1,5 +1,4 @@
 // icon.tsx （超適当なページ）
-import { useState } from "react";
 import { Image, Pressable, StyleSheet, View } from "react-native";
 import Menu from "./menu";
 type Props = {
@@ -8,6 +7,8 @@ type Props = {
   userName?: string; // ユーザー名
   email?: string;
   orgId?: string;
+  isMenuOpen: boolean;
+  setMenuOpen: (val: boolean) => void;
 };
 
 export default function Icon({
@@ -16,8 +17,9 @@ export default function Icon({
   userName,
   email,
   orgId,
+  isMenuOpen,
+  setMenuOpen,
 }: Props) {
-  const [isMenuOpen, setMenuOpen] = useState(false);
   return (
     <View
       pointerEvents="box-none"

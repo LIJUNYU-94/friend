@@ -126,7 +126,11 @@ export default function OrgProfile() {
               />
             ) : (
               <Text style={styles.contentText}>
-                {orgData.created || "創設日未入力"}
+                {orgData.created ||
+                  new Date(
+                    orgData.created.seconds * 1000
+                  ).toLocaleDateString() ||
+                  "創設日未入力"}
               </Text>
             )}
           </ProfileField>

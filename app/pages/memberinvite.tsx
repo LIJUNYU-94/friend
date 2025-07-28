@@ -12,7 +12,11 @@ import {
 } from "react-native";
 
 export default function MemberInvite() {
-  const { orgId } = useLocalSearchParams<{ orgId: string }>();
+  const { orgId, status, email } = useLocalSearchParams<{
+    orgId: string;
+    status: string;
+    email: string;
+  }>();
   const [domain, setDomain] = useState(""); // 組織ドメイン
   const [emailInput, setEmailInput] = useState(""); // メール or @前入力
   const [nameInput, setNameInput] = useState(""); // メール or @前入力
@@ -108,7 +112,9 @@ export default function MemberInvite() {
             </Text>
           ))}
         </View>
-        <Text style={styles.note}>あとで追加招待可能</Text>
+        {status === "new" && (
+          <Text style={styles.note}>あとで追加招待可能</Text>
+        )}
       </View>
 
       <View style={styles.boxDomain}>
@@ -122,9 +128,29 @@ export default function MemberInvite() {
         />
       </View>
 
-      <TouchableOpacity style={styles.nextButton} onPress={() => router.back()}>
-        <Text style={styles.nextButtonText}>次へ</Text>
-      </TouchableOpacity>
+      {status === "new" ? (
+        <TouchableOpacity
+          style={styles.nextButton}
+          onPress={() =>
+            router.replace({
+              pathname: "/pages/adminjoin",
+              params: {
+                orgId: orgId,
+                email: email,
+              },
+            })
+          }
+        >
+          <Text style={styles.nextButtonText}>次へ</Text>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity
+          style={styles.nextButton}
+          onPress={() => router.back()}
+        >
+          <Text style={styles.nextButtonText}>戻る</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }

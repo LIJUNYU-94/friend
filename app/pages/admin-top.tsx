@@ -30,6 +30,7 @@ import {
   View,
 } from "react-native";
 import { db } from "../../lib/firebase"; // あなたの firebase.ts へのパスに合わせて変更
+
 type User = {
   id: string;
   name?: string;
@@ -83,6 +84,7 @@ export default function AdminTop({ userIcon, role, userName, orgId }: Props) {
   const [myStars, setMyStars] = useState<Record<string, string>>({});
   const [org, setOrg] = useState("");
   const encodeKey = (email: string): string => email.replace(/\./g, "__");
+  const [isMenuOpen, setMenuOpen] = useState(false);
 
   const orgRef = doc(db, "orgs", orgId as string);
   getDoc(orgRef).then((docSnap) => {
@@ -502,6 +504,8 @@ export default function AdminTop({ userIcon, role, userName, orgId }: Props) {
             userName={userName}
             email={myEmail ?? ""}
             orgId={orgId}
+            isMenuOpen={isMenuOpen}
+            setMenuOpen={setMenuOpen}
           />
           <Pressable onPress={() => setShowDelete((prev) => !prev)}>
             <Text style={[styles.title, { marginTop: 20 }]}>
@@ -518,13 +522,15 @@ export default function AdminTop({ userIcon, role, userName, orgId }: Props) {
         </SafeAreaView>
       )}
       {role === "member" && (
-        <ScrollView style={[styles.container]}>
+        <ScrollView style={[styles.container]} scrollEnabled={!isMenuOpen}>
           <Icon
             userIcon={userIcon}
             role={role}
             userName={userName}
             email={myEmail ?? ""}
             orgId={orgId}
+            isMenuOpen={isMenuOpen}
+            setMenuOpen={setMenuOpen}
           />
           <View style={[styles.header, { paddingTop: 50 }]}>
             {/* <Image
@@ -536,7 +542,15 @@ export default function AdminTop({ userIcon, role, userName, orgId }: Props) {
               今日は誰と仲良くなりたい？
             </Text>
           </View>
-          <View style={styles.progress2}>
+          <TouchableOpacity
+            style={styles.progress2}
+            onPress={() =>
+              router.push({
+                pathname: "/pages/collection",
+                params: { orgId: orgId, myEmail: myEmail },
+              })
+            }
+          >
             <View>
               <Text style={styles.article}>
                 コネクション進捗：{connectedCount} / {totalCount}
@@ -553,19 +567,11 @@ export default function AdminTop({ userIcon, role, userName, orgId }: Props) {
                 </View>
               </View>
             </View>
-            <TouchableOpacity
-              style={{ alignSelf: "center", marginLeft: 20 }}
-              onPress={() =>
-                router.push({
-                  pathname: "/pages/collection",
-                  params: { orgId: orgId, myEmail: myEmail },
-                })
-              }
-            >
+            <View style={{ alignSelf: "center", marginLeft: 20 }}>
               <Text style={{ color: "#80590C", fontSize: 16 }}>もっと見る</Text>
-            </TouchableOpacity>
+            </View>
             <AntDesign name="right" size={16} color="#80590C" />
-          </View>
+          </TouchableOpacity>
           <Pressable
             onPress={() =>
               router.push({
@@ -614,6 +620,7 @@ export default function AdminTop({ userIcon, role, userName, orgId }: Props) {
               paddingVertical: 42,
               paddingHorizontal: 12,
               gap: 20,
+              minHeight: 450,
             }}
             data={users}
             keyExtractor={(item) => item.id}

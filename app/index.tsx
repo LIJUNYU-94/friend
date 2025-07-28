@@ -25,6 +25,7 @@ import {
 // @ts-ignore
 import { auth, db } from "../lib/firebase";
 import AdminTop from "./pages/admin-top";
+import WaitingCheckScreen from "./pages/waitingCheck";
 
 //************************************************************本番用ログイン手段(google認証)***********************************************************//
 function AuthScreen() {
@@ -110,8 +111,9 @@ function NameRegister({ userEmail }: { userEmail: string }) {
 
   return (
     <View style={{ flex: 1, justifyContent: "center", padding: 20 }}>
-      <Text>初めまして！{userEmail}さん</Text>
-      <Text>お名前を入力してください</Text>
+      <Text style={styles.firsttext}>初めまして！</Text>
+      <Text style={styles.firsttext}>{userEmail}さん</Text>
+      <Text style={styles.firsttext}>お名前を入力してください</Text>
       <TextInput
         value={name}
         onChangeText={setName}
@@ -154,7 +156,14 @@ export default function App() {
   const [userName, setUserName] = useState<string | null>(null);
   const [userIcon, setUserIcon] = useState<string | null>(null);
   const [role, setRole] = useState<
-    "admin" | "pending_admin" | "member" | "none" | "pending" | "elect" | null
+    | "admin"
+    | "pending_admin"
+    | "newadmin"
+    | "member"
+    | "none"
+    | "pending"
+    | "elect"
+    | null
   >(null);
   const [loading, setLoading] = useState(true);
   const [loadingAuth, setLoadingAuth] = useState(true);
@@ -171,7 +180,10 @@ export default function App() {
   );
   useEffect(() => {
     if (firstLaunchChecked && isFirstLaunch) {
-      router.replace("/pages/guide");
+      router.replace({
+        pathname: "/pages/guide",
+        params: { status: "new" },
+      });
     }
   }, [firstLaunchChecked, isFirstLaunch]);
   useEffect(() => {
@@ -216,6 +228,7 @@ export default function App() {
         } else {
           setRole("none"); // 未所属
         }
+        console.log(matches);
         // ---------- ここまで変更 ----------
 
         // ↓ Firestore から名前取得
@@ -283,8 +296,50 @@ export default function App() {
               userName={userName ?? undefined}
               orgId={orgNow}
             />
+          ) : role === "newadmin" ? (
+            <View
+              style={{
+                alignItems: "center",
+                gap: 40,
+                flex: 1,
+                justifyContent: "center",
+              }}
+            >
+              <Text style={{ fontSize: 20, color: "#80590c" }}>
+                {userName}さん！
+              </Text>
+              <Text style={{ fontSize: 20, color: "#80590c" }}>
+                組織「{orgNow}」の審査が通過しました！👏
+              </Text>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: "#0047AB",
+                  paddingVertical: 12,
+                  paddingHorizontal: 24,
+                  borderRadius: 8,
+                }}
+                onPress={() => {
+                  router.push({
+                    pathname: "/pages/guide",
+                    params: {
+                      status: "admin",
+                      role: role,
+                      email: userEmail,
+                      orgId: orgNow,
+                    },
+                  });
+                }}
+              >
+                <Text style={{ color: "white", fontSize: 16 }}>
+                  初期設定へ進む
+                </Text>
+              </TouchableOpacity>
+            </View>
           ) : role === "pending_admin" ? (
-            <Text>審査中画面です</Text>
+            <>
+              <WaitingCheckScreen />
+              <Button title="ログアウト" onPress={handleLogout} />
+            </>
           ) : role === "none" && userName === "名前未登録" ? (
             <>
               <NameRegister userEmail={userEmail} />
@@ -393,6 +448,11 @@ const styles = StyleSheet.create({
     fontSize: 32,
     top: 170,
     letterSpacing: 2.5,
+  },
+  firsttext: {
+    color: "#533B08",
+    letterSpacing: 1.5,
+    fontSize: 16,
   },
   card: {
     width: "75%",

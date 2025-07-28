@@ -1,14 +1,29 @@
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 export default function Guide() {
+  const { status, role, email, orgId } = useLocalSearchParams();
+  console.log(status, role, email, orgId);
   const [step, setStep] = useState(0);
-
+  let steps;
+  if (status === "new") {
+    steps = 4;
+  } else {
+    steps = 3;
+  }
+  const handlers = status === "new" ? [0, 1, 2, 3, 4] : [0, 1, 2, 3];
   const handleNext = () => {
-    if (step < 4) {
+    if (step < steps) {
       setStep(step + 1);
     } else {
-      router.replace("/"); // 最後はHOMEやTOPへ遷移
+      if (status === "new") {
+        router.replace("/");
+      } else if (status === "admin") {
+        router.replace({
+          pathname: "/pages/admin-setting",
+          params: { role: role, email: email, orgId: orgId },
+        });
+      }
     }
   };
 
@@ -21,113 +36,227 @@ export default function Guide() {
         >
           <Text style={styles.skiptext}>スキップ</Text>
         </TouchableOpacity>
-        <View style={styles.imagecontainer}>
-          {step === 0 && (
-            <>
-              <Text style={[styles.imagetext, { fontSize: 32, top: 170 }]}>
-                友達コネクションへ{"\n"}ようこそ
-              </Text>
+        {status === "new" ? (
+          <View style={styles.imagecontainer}>
+            {step === 0 && (
+              <>
+                <Text style={[styles.imagetext, { fontSize: 32, top: 170 }]}>
+                  友達コネクションへ{"\n"}ようこそ
+                </Text>
+                <View
+                  style={{
+                    paddingHorizontal: 20,
+                  }}
+                >
+                  <Image
+                    source={require("../../assets/images/start1.png")}
+                    style={{ width: 247, resizeMode: "contain" }}
+                  />
+                </View>
+              </>
+            )}
+            {step === 1 && (
+              <>
+                <Text
+                  style={[
+                    styles.imagetext,
+                    { fontSize: 16, bottom: 30, flexShrink: 1 },
+                  ]}
+                >
+                  まずは自分のプロフィールを入力しよう
+                </Text>
+                <Image
+                  source={require("../../assets/images/start2.png")}
+                  style={{ width: 195, resizeMode: "contain" }}
+                />
+              </>
+            )}
+            {step === 2 && (
+              <View style={{ width: 350, height: 350 }}>
+                <Text
+                  style={[
+                    styles.imagetext,
+                    { fontSize: 16, top: 280, left: 30 },
+                  ]}
+                >
+                  顔と名前が覚えられる！
+                </Text>
+                <Image
+                  source={require("../../assets/images/start3-1.png")}
+                  style={{
+                    width: 235,
+                    resizeMode: "contain",
+                    position: "absolute",
+                    top: 0,
+                  }}
+                />
+                <Image
+                  source={require("../../assets/images/start3-2.png")}
+                  style={{
+                    width: 34,
+                    resizeMode: "contain",
+                    position: "absolute",
+                    top: 200,
+                    left: 120,
+                  }}
+                />
+                <Image
+                  source={require("../../assets/images/start3-3.png")}
+                  style={{
+                    width: 119,
+                    resizeMode: "contain",
+                    position: "absolute",
+                    top: 200,
+                    right: 20,
+                  }}
+                />
+              </View>
+            )}
+            {step === 3 && (
+              <>
+                <Text
+                  style={[
+                    styles.imagetext,
+                    {
+                      fontSize: 16,
+                      bottom: -70,
+                      left: 0,
+                      width: "100%",
+                    },
+                  ]}
+                >
+                  友達に話しかけるきっかけができる！
+                </Text>
+                <Image
+                  source={require("../../assets/images/start4.png")}
+                  style={{ width: 438, resizeMode: "contain" }}
+                />
+              </>
+            )}
+            {step === 4 && (
+              <>
+                <Text
+                  style={[
+                    styles.imagetext,
+                    { fontSize: 16, bottom: 197, width: "100%" },
+                  ]}
+                >
+                  コネクション状況もわかる！
+                </Text>
+                <Image
+                  source={require("../../assets/images/start5.png")}
+                  style={{ width: 205, resizeMode: "contain", top: -30 }}
+                />
+              </>
+            )}
+          </View>
+        ) : (
+          <View style={styles.imagecontainer}>
+            {step === 0 && (
+              <>
+                <Text
+                  style={[
+                    styles.imagetext,
+                    {
+                      fontSize: 16,
+                      bottom: 30,
+                      flexShrink: 1,
+                      alignSelf: "center",
+                    },
+                  ]}
+                >
+                  管理者ができることを説明します
+                </Text>
+                <Image
+                  source={require("../../assets/images/adminguide1.png")}
+                  style={{
+                    width: 235,
+                    resizeMode: "contain",
+                    paddingHorizontal: 20,
+                  }}
+                />
+              </>
+            )}
 
-              <Image
-                source={require("../../assets/images/start1.png")}
-                style={{ width: 247, resizeMode: "contain" }}
-              />
-            </>
-          )}
-          {step === 1 && (
-            <>
-              <Text
-                style={[
-                  styles.imagetext,
-                  { fontSize: 16, bottom: 30, flexShrink: 1 },
-                ]}
-              >
-                まずは自分のプロフィールを入力しよう
-              </Text>
-              <Image
-                source={require("../../assets/images/start2.png")}
-                style={{ width: 195, resizeMode: "contain" }}
-              />
-            </>
-          )}
-          {step === 2 && (
-            <View style={{ width: 350, height: 350 }}>
-              <Text
-                style={[styles.imagetext, { fontSize: 16, top: 280, left: 30 }]}
-              >
-                顔と名前が覚えられる！
-              </Text>
-              <Image
-                source={require("../../assets/images/start3-1.png")}
-                style={{
-                  width: 235,
-                  resizeMode: "contain",
-                  position: "absolute",
-                  top: 0,
-                }}
-              />
-              <Image
-                source={require("../../assets/images/start3-2.png")}
-                style={{
-                  width: 34,
-                  resizeMode: "contain",
-                  position: "absolute",
-                  top: 200,
-                  left: 120,
-                }}
-              />
-              <Image
-                source={require("../../assets/images/start3-3.png")}
-                style={{
-                  width: 119,
-                  resizeMode: "contain",
-                  position: "absolute",
-                  top: 200,
-                  right: 20,
-                }}
-              />
-            </View>
-          )}
-          {step === 3 && (
-            <>
-              <Text
-                style={[
-                  styles.imagetext,
-                  {
-                    fontSize: 16,
-                    bottom: -70,
-                    left: 0,
-                    width: "100%",
-                  },
-                ]}
-              >
-                友達に話しかけるきっかけができる！
-              </Text>
-              <Image
-                source={require("../../assets/images/start4.png")}
-                style={{ width: 438, resizeMode: "contain" }}
-              />
-            </>
-          )}
-          {step === 4 && (
-            <>
-              <Text
-                style={[
-                  styles.imagetext,
-                  { fontSize: 16, bottom: 197, width: "100%" },
-                ]}
-              >
-                コネクション状況もわかる！
-              </Text>
-              <Image
-                source={require("../../assets/images/start5.png")}
-                style={{ width: 205, resizeMode: "contain", top: -30 }}
-              />
-            </>
-          )}
-        </View>
+            {step === 1 && (
+              <>
+                <Text
+                  style={[
+                    styles.imagetext,
+                    {
+                      fontSize: 16,
+                      bottom: 135,
+                      width: "100%",
+                    },
+                  ]}
+                >
+                  あなたの組織の情報を編集できます
+                </Text>
+                <Image
+                  source={require("../../assets/images/adminguide2.png")}
+                  style={{ width: 289, resizeMode: "contain", bottom: 30 }}
+                />
+              </>
+            )}
+            {step === 2 && (
+              <>
+                <Text
+                  style={[
+                    styles.imagetext,
+                    {
+                      fontSize: 16,
+                      bottom: 0,
+                      flexShrink: 1,
+                      alignSelf: "center",
+                    },
+                  ]}
+                >
+                  あなたの組織のメンバーを
+                </Text>
+                <Text
+                  style={[
+                    styles.imagetext,
+                    {
+                      fontSize: 16,
+                      bottom: -30,
+                      flexShrink: 1,
+                      alignSelf: "center",
+                    },
+                  ]}
+                >
+                  アプリに招待できます
+                </Text>
+                <Image
+                  source={require("../../assets/images/adminguide3.png")}
+                  style={{ width: 320, resizeMode: "contain" }}
+                />
+              </>
+            )}
+            {step === 3 && (
+              <>
+                <Text
+                  style={[
+                    styles.imagetext,
+                    {
+                      fontSize: 16,
+                      bottom: 50,
+                      left: 0,
+                      width: "100%",
+                    },
+                  ]}
+                >
+                  メンバーの管理ができます
+                </Text>
+                <Image
+                  source={require("../../assets/images/adminguide4.png")}
+                  style={{ width: 269, resizeMode: "contain", bottom: 30 }}
+                />
+              </>
+            )}
+          </View>
+        )}
         <View style={styles.handler}>
-          {[0, 1, 2, 3, 4].map((i) => (
+          {handlers.map((i) => (
             <TouchableOpacity
               key={i}
               onPress={() => setStep(i)}
@@ -176,6 +305,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#533B08",
     zIndex: 5,
+    letterSpacing: 1.5,
   },
   handler: {
     flexDirection: "row",

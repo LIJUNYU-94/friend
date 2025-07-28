@@ -90,7 +90,9 @@ export default function BeFriend({
         if (authword === inputCode) {
           handleSuccess();
         } else {
-          console.log("❌ 間違い！authwordが一致しません");
+          alert(
+            "認証コードが間違えています。\n友達にもう一度聞いてみましょう。"
+          );
         }
       } else {
         console.log("❌ メンバーが存在しません");

@@ -59,6 +59,10 @@ export default function CreateOrg() {
           role: "pending_admin",
         }),
       });
+      router.push({
+        pathname: "/pages/waitingCheck",
+        params: { status: "new" },
+      });
       console.log("✅ 組織を作成しました:", orgRef.id);
     } catch (error) {
       console.error("❌ 組織の作成に失敗:", error);

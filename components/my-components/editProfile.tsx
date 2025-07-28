@@ -375,7 +375,13 @@ const EditProfile: React.FC<EditProfileProps> = ({
                 setEditingBirthday(true);
               }}
             >
-              <Text style={{ paddingVertical: 4, color: "#333" }}>
+              <Text
+                style={{
+                  paddingVertical: 4,
+                  color: "#333",
+                  textDecorationLine: "underline",
+                }}
+              >
                 {birthday}
               </Text>
             </Pressable>
@@ -425,7 +431,13 @@ const EditProfile: React.FC<EditProfileProps> = ({
                   setEditinghometown(true);
                 }}
               >
-                <Text style={{ paddingVertical: 4, color: "#333" }}>
+                <Text
+                  style={{
+                    paddingVertical: 4,
+                    color: "#333",
+                    textDecorationLine: "underline",
+                  }}
+                >
                   {hometown}
                 </Text>
               </Pressable>
@@ -468,7 +480,13 @@ const EditProfile: React.FC<EditProfileProps> = ({
                   setEditingMbti(true);
                 }}
               >
-                <Text style={{ paddingVertical: 4, color: "#333" }}>
+                <Text
+                  style={{
+                    paddingVertical: 4,
+                    color: "#333",
+                    textDecorationLine: "underline",
+                  }}
+                >
                   {mbti}
                 </Text>
               </Pressable>
@@ -504,7 +522,13 @@ const EditProfile: React.FC<EditProfileProps> = ({
                   setEditingBlood(true);
                 }}
               >
-                <Text style={{ paddingVertical: 4, color: "#333" }}>
+                <Text
+                  style={{
+                    paddingVertical: 4,
+                    color: "#333",
+                    textDecorationLine: "underline",
+                  }}
+                >
                   {bloodType}
                 </Text>
               </Pressable>
@@ -570,7 +594,13 @@ const EditProfile: React.FC<EditProfileProps> = ({
                   setEditingHobby(true);
                 }}
               >
-                <Text style={{ paddingVertical: 4, color: "#333" }}>
+                <Text
+                  style={{
+                    paddingVertical: 4,
+                    color: "#333",
+                    textDecorationLine: "underline",
+                  }}
+                >
                   {Array.isArray(hobby) && hobby.length > 0
                     ? hobby.join(" 、 ")
                     : "未入力"}
@@ -591,19 +621,19 @@ const EditProfile: React.FC<EditProfileProps> = ({
           }
         }}
       >
-        <Text style={styles.label}>カスタマイズ</Text>
         <Text
           style={{
             fontSize: 20,
-            marginLeft: 50,
+            marginTop: 30,
+            marginLeft: 40,
             paddingVertical: 5,
             paddingHorizontal: 20,
-            borderColor: "red",
+            borderColor: "#002AB3",
             borderWidth: 2,
             borderRadius: 20,
           }}
         >
-          編集
+          カスタマイズ項目追加
         </Text>
       </Pressable>
 
@@ -611,8 +641,9 @@ const EditProfile: React.FC<EditProfileProps> = ({
         <View
           style={{
             position: "absolute",
-            borderRadius: 50,
+            borderRadius: 30,
             padding: 30,
+
             top: -50,
             width: "110%",
             height: "120%",
@@ -620,6 +651,69 @@ const EditProfile: React.FC<EditProfileProps> = ({
             backgroundColor: "white",
           }}
         >
+          <View
+            style={{ flexDirection: "row", justifyContent: "space-between" }}
+          >
+            <TouchableOpacity
+              style={{
+                alignSelf: "center",
+                borderRadius: 29,
+                width: 100,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                paddingVertical: 5,
+                borderColor: "#002ab3",
+                borderWidth: 1,
+                marginVertical: 30,
+              }}
+              onPress={() => {
+                setEditingCustomize(false);
+              }}
+            >
+              <Text
+                style={[
+                  styles.label,
+                  {
+                    textAlign: "center",
+                    alignItems: "center",
+                    color: "#002ab3",
+                  },
+                ]}
+              >
+                戻る
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                alignSelf: "center",
+                borderRadius: 29,
+                width: 100,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                paddingVertical: 5,
+                backgroundColor: "#002Ab3",
+                marginVertical: 30,
+              }}
+              onPress={() => {
+                handleSave(), setEditingCustomize(false);
+              }}
+            >
+              <Text
+                style={[
+                  styles.label,
+                  {
+                    textAlign: "center",
+                    alignItems: "center",
+                    color: "white",
+                  },
+                ]}
+              >
+                保存
+              </Text>
+            </TouchableOpacity>
+          </View>
           <ScrollView>
             {customize.map((item) => (
               <TouchableOpacity
@@ -893,35 +987,6 @@ const EditProfile: React.FC<EditProfileProps> = ({
                   )}
                 </View>
               ))}
-            <TouchableOpacity
-              style={{
-                alignSelf: "center",
-                borderRadius: 29,
-                width: 200,
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "center",
-                paddingVertical: 5,
-                backgroundColor: "#D9D9D9",
-                marginVertical: 30,
-              }}
-              onPress={() => {
-                handleSave(), setEditingCustomize(false);
-              }}
-            >
-              <Text
-                style={[
-                  styles.label,
-                  {
-                    textAlign: "center",
-                    alignItems: "center",
-                    color: "black",
-                  },
-                ]}
-              >
-                保存
-              </Text>
-            </TouchableOpacity>
           </ScrollView>
         </View>
       )}

@@ -112,9 +112,8 @@ export default function ProfilePage() {
       await updateDoc(targetRef, {
         [`connections.${encodedMe}`]: "connected",
       });
-
       setAuthWordOn(false);
-      alert("友達になりました,認証コード5分後に変わります！");
+      alert("友達になりました！");
     } catch (error) {
       console.error("❌ connection更新失敗:", error);
     }
@@ -188,7 +187,7 @@ export default function ProfilePage() {
     <ScrollView contentContainerStyle={styles.container}>
       {/* プロフィール上部 */}
       <View style={styles.subcontainer}>
-        {role == "member" && (
+        {role == "member" && (isMyProfile || relation !== "connected") && (
           <TouchableOpacity
             style={{
               position: "absolute",

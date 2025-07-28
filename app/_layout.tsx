@@ -6,12 +6,14 @@ import "react-native-reanimated";
 
 export default function RootLayout() {
   const [loaded] = useFonts({
-    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
+    ZenMaru: require("../assets/fonts/ZenMaruGothic-Regular.ttf"),
   });
 
   if (!loaded) return null;
+
   return (
     <>
+      {/* Use CustomText instead of Text throughout your app */}
       <Stack screenOptions={{ headerShown: false }} />
       {/* <Stack /> */}
       <StatusBar style="auto" />
