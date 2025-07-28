@@ -286,15 +286,23 @@ const EditProfile: React.FC<EditProfileProps> = ({
     try {
       const memberRef = doc(db, "orgs", orgIdStr, "members", now.email);
 
-      await updateDoc(memberRef, {
-        birthday,
-        zodiac,
-        hometown,
-        mbti,
-        bloodType,
-        hobby,
-      });
-      console.log("✅ Firestore に保存完了");
+      const dataToUpdate: { [key: string]: any } = {};
+
+      if (birthday && birthday.trim() !== "") dataToUpdate.birthday = birthday;
+      if (zodiac && zodiac.trim() !== "") dataToUpdate.zodiac = zodiac;
+      if (hometown && hometown.trim() !== "") dataToUpdate.hometown = hometown;
+      if (mbti && mbti.trim() !== "") dataToUpdate.mbti = mbti;
+      if (bloodType && bloodType.trim() !== "")
+        dataToUpdate.bloodType = bloodType;
+      if (hobby && Array.isArray(hobby) && hobby.length > 0)
+        dataToUpdate.hobby = hobby;
+
+      if (Object.keys(dataToUpdate).length > 0) {
+        await updateDoc(memberRef, dataToUpdate);
+        console.log("✅ Firestore に保存完了:", dataToUpdate);
+      } else {
+        console.log("⚠️ 保存すべきデータがありません。");
+      }
 
       onSaveComplete(); // 親に完了通知
     } catch (error) {
@@ -451,7 +459,7 @@ const EditProfile: React.FC<EditProfileProps> = ({
             {isEditingMbti ? (
               <>
                 <Field
-                  label=""
+                  // label=""
                   value={mbti}
                   onChange={(text) => setMbti(text.toUpperCase())}
                 />
@@ -644,12 +652,12 @@ const EditProfile: React.FC<EditProfileProps> = ({
             position: "absolute",
             borderRadius: 30,
             padding: 30,
-
             top: -50,
+            left: 3,
             width: "110%",
             height: "120%",
             zIndex: 3,
-            backgroundColor: "white",
+            backgroundColor: "#ffd581",
           }}
         >
           <View
@@ -996,18 +1004,22 @@ const EditProfile: React.FC<EditProfileProps> = ({
 };
 
 function Field({
-  label,
+  // label,
   value,
   onChange,
 }: {
-  label: string;
+  // label: string;
   value: string;
   onChange: (v: string) => void;
 }) {
   return (
     <View style={styles.fieldRow}>
-      <Text style={styles.label}>{label}</Text>
-      <TextInput style={styles.input} value={value} onChangeText={onChange} />
+      {/* <Text style={styles.label}>{label}</Text> */}
+      <TextInput
+        style={[styles.input, { flex: 0 }]}
+        value={value}
+        onChangeText={onChange}
+      />
     </View>
   );
 }

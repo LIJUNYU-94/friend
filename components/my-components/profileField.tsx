@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
     width: "100%",
     alignSelf: "center",
     backgroundColor: "#fff",
-    height: 60,
+    minHeight: 60,
     marginBottom: 12,
   },
   label: {

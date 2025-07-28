@@ -10,12 +10,14 @@ import {
   getDocs,
   serverTimestamp,
   setDoc,
+  updateDoc,
 } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Button,
   Image,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -26,7 +28,20 @@ import {
 import { auth, db } from "../lib/firebase";
 import AdminTop from "./pages/admin-top";
 import WaitingCheckScreen from "./pages/waitingCheck";
-
+const getRoleLabel = (role: string): string => {
+  switch (role) {
+    case "admin":
+      return "管理者";
+    case "member":
+      return "メンバー";
+    case "pending":
+      return "受け待ち";
+    case "pending_admin":
+      return "管理者審査中";
+    default:
+      return "未設定";
+  }
+};
 //************************************************************本番用ログイン手段(google認証)***********************************************************//
 function AuthScreen() {
   //ログイン
@@ -178,6 +193,55 @@ export default function App() {
   const [selectedRole, setSelectedRole] = useState<"admin" | "member" | null>(
     null
   );
+  const [orgDetails, setOrgDetails] = useState<
+    {
+      role: string;
+      orgId: string;
+      orgName: string;
+      adminName: string;
+    }[]
+  >([]);
+
+  useEffect(() => {
+    const fetchOrgDetails = async () => {
+      const results: {
+        orgId: string;
+        orgName: string;
+        role: string;
+        adminName: string;
+      }[] = [];
+
+      for (const candidate of orgCandidates) {
+        const orgRef = doc(db, "orgs", candidate.orgId);
+        const orgSnap = await getDoc(orgRef);
+
+        const memberRef = doc(
+          db,
+          "orgs",
+          candidate.orgId,
+          "members",
+          userEmail
+        );
+        const memberSnap = await getDoc(memberRef);
+
+        if (orgSnap.exists() && memberSnap.exists()) {
+          const orgData = orgSnap.data();
+          const memberData = memberSnap.data();
+
+          results.push({
+            orgId: candidate.orgId,
+            orgName: orgData.name,
+            role: memberData.role ?? "未設定",
+            adminName: orgData.adminName ?? "不明",
+          });
+        }
+      }
+
+      setOrgDetails(results);
+    };
+
+    if (role === "elect") fetchOrgDetails();
+  }, [role, orgCandidates, userEmail]);
   useEffect(() => {
     if (firstLaunchChecked && isFirstLaunch) {
       router.replace({
@@ -345,78 +409,201 @@ export default function App() {
               <NameRegister userEmail={userEmail} />
               <Button title="ログアウト" onPress={handleLogout} />
             </>
-          ) : (
-            role === "none" && (
-              <View
-                style={{
-                  flex: 1,
-                  backgroundColor: "#FFF4E2",
-                  alignItems: "center",
-                  paddingTop: 80,
-                  paddingHorizontal: 20,
+          ) : role === "none" ? (
+            <View
+              style={{
+                flex: 1,
+                backgroundColor: "#FFF4E2",
+                alignItems: "center",
+                paddingTop: 80,
+                paddingHorizontal: 20,
+              }}
+            >
+              <Text style={{ fontSize: 18, color: "#999", marginBottom: 20 }}>
+                役割選択
+              </Text>
+
+              <TouchableOpacity
+                style={[
+                  styles.card,
+                  selectedRole === "admin" && styles.cardSelected,
+                ]}
+                onPress={() => setSelectedRole("admin")}
+              >
+                <Text style={styles.cardText}>組織管理者</Text>
+              </TouchableOpacity>
+
+              {/* メンバーカード */}
+              <TouchableOpacity
+                style={[
+                  styles.card,
+                  selectedRole === "member" && styles.cardSelected,
+                ]}
+                onPress={() => setSelectedRole("member")}
+              >
+                <Text style={styles.cardText}>組織メンバー</Text>
+              </TouchableOpacity>
+
+              {/* 決定ボタン */}
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  selectedRole ? styles.buttonEnabled : styles.buttonDisabled,
+                ]}
+                disabled={!selectedRole}
+                onPress={() => {
+                  if (!selectedRole) return;
+
+                  const nextPage =
+                    selectedRole === "admin"
+                      ? "/pages/create-org"
+                      : "/pages/view-invite";
+
+                  router.replace({
+                    pathname: nextPage,
+                    params: {
+                      userName,
+                      userEmail,
+                    },
+                  });
                 }}
               >
-                <Text style={{ fontSize: 18, color: "#999", marginBottom: 20 }}>
-                  役割選択
+                <Text
+                  style={[
+                    styles.buttonText,
+                    selectedRole
+                      ? styles.buttonTextEnabled
+                      : styles.buttonTextDisabled,
+                  ]}
+                >
+                  この役割で進める
                 </Text>
-
-                <TouchableOpacity
-                  style={[
-                    styles.card,
-                    selectedRole === "admin" && styles.cardSelected,
-                  ]}
-                  onPress={() => setSelectedRole("admin")}
-                >
-                  <Text style={styles.cardText}>組織管理者</Text>
-                </TouchableOpacity>
-
-                {/* メンバーカード */}
-                <TouchableOpacity
-                  style={[
-                    styles.card,
-                    selectedRole === "member" && styles.cardSelected,
-                  ]}
-                  onPress={() => setSelectedRole("member")}
-                >
-                  <Text style={styles.cardText}>組織メンバー</Text>
-                </TouchableOpacity>
-
-                {/* 決定ボタン */}
-                <TouchableOpacity
-                  style={[
-                    styles.button,
-                    selectedRole ? styles.buttonEnabled : styles.buttonDisabled,
-                  ]}
-                  disabled={!selectedRole}
-                  onPress={() => {
-                    if (!selectedRole) return;
-
-                    const nextPage =
-                      selectedRole === "admin"
-                        ? "/pages/create-org"
-                        : "/pages/view-invite";
-
-                    router.replace({
-                      pathname: nextPage,
-                      params: {
-                        userName,
-                        userEmail,
-                      },
-                    });
+              </TouchableOpacity>
+            </View>
+          ) : (
+            role === "elect" && (
+              <ScrollView
+                style={{ flex: 1, backgroundColor: "#FFF4E2", padding: 20 }}
+              >
+                <Text
+                  style={{
+                    fontSize: 18,
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    color: "#80590c",
+                    marginVertical: 30,
                   }}
                 >
-                  <Text
-                    style={[
-                      styles.buttonText,
-                      selectedRole
-                        ? styles.buttonTextEnabled
-                        : styles.buttonTextDisabled,
-                    ]}
+                  以下の組織から招待されています
+                </Text>
+
+                {orgDetails.map((org) => (
+                  <TouchableOpacity
+                    key={org.orgId}
+                    onPress={async () => {
+                      setRole(org.role as any);
+                      setorgNow(org.orgId);
+
+                      // FirestoreにorgNowを保存
+                      const currentUser = auth.currentUser;
+                      if (currentUser && currentUser.uid) {
+                        const userRef = doc(db, "users", currentUser.uid);
+                        await updateDoc(userRef, {
+                          orgNow: org.orgId,
+                        });
+                        console.log("✅ orgNow をユーザーに保存:", org.orgId);
+                      } else {
+                        console.warn(
+                          "❌ Firestore保存スキップ: 未ログイン状態"
+                        );
+                      }
+                    }}
+                    style={{
+                      flexDirection: "row",
+                      borderRadius: 20,
+                      overflow: "hidden",
+                      marginBottom: 20,
+                      backgroundColor: "#fff",
+                      elevation: 3,
+                    }}
                   >
-                    この役割で進める
-                  </Text>
-                </TouchableOpacity>
-              </View>
+                    <View
+                      style={{
+                        backgroundColor: "#FFD97B",
+                        padding: 20,
+                        flex: 1,
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Text style={{ fontSize: 18, fontWeight: "bold" }}>
+                        {org.orgName}
+                      </Text>
+                    </View>
+                    <View
+                      style={{
+                        backgroundColor: "white",
+                        padding: 20,
+                        flex: 1,
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Text style={{ fontSize: 14 }}>
+                        役割：{getRoleLabel(org.role)}
+                      </Text>
+
+                      <Text style={{ fontSize: 14 }}>
+                        招待者：{org.adminName}
+                      </Text>
+                    </View>
+                    {org.role === "pending" && (
+                      <TouchableOpacity
+                        style={{
+                          backgroundColor: "#0047AB",
+                          paddingVertical: 5,
+                          paddingHorizontal: 10,
+                          borderRadius: 8,
+
+                          alignSelf: "center",
+                        }}
+                        onPress={async () => {
+                          try {
+                            const memberRef = doc(
+                              db,
+                              "orgs",
+                              org.orgId,
+                              "members",
+                              userEmail
+                            );
+                            await updateDoc(memberRef, {
+                              role: "member",
+                            });
+
+                            alert(`「${org.orgName}」に参加しました！`);
+
+                            // ✅ orgDetails を更新 or 画面をリロードしたければここに追記
+                            setOrgDetails((prev) =>
+                              prev.map((o) =>
+                                o.orgId === org.orgId
+                                  ? { ...o, role: "member" }
+                                  : o
+                              )
+                            );
+                          } catch (error) {
+                            console.error("参加失敗:", error);
+                            alert(
+                              "参加に失敗しました。もう一度お試しください。"
+                            );
+                          }
+                        }}
+                      >
+                        <Text style={{ color: "white", fontSize: 14 }}>
+                          加入
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
             )
           )}
           {/* <Button title="ログアウト" onPress={handleLogout} /> */}
