@@ -139,6 +139,7 @@ const styles = StyleSheet.create({
   backText: {
     color: "#80590C",
     fontSize: 16,
+    fontFamily: "ZenMaru",
   },
   overallContainer: {
     backgroundColor: "white",
@@ -155,11 +156,13 @@ const styles = StyleSheet.create({
   },
   overallTitle: {
     fontSize: 16,
+    fontFamily: "ZenMaru",
     color: "#80590C",
     marginBottom: 10,
   },
   overallPercent: {
     fontSize: 48,
+    fontFamily: "ZenMaru",
     color: "#80590C",
     fontWeight: "bold",
   },
@@ -184,6 +187,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 16,
+    fontFamily: "ZenMaru",
     color: "#80590C",
     marginBottom: 8,
   },
@@ -196,6 +200,7 @@ const styles = StyleSheet.create({
     textAlign: "right",
     color: "#80590C",
     marginTop: 8,
+    fontFamily: "ZenMaru",
     fontSize: 16,
   },
   batches: {

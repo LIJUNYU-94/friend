@@ -445,6 +445,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#533B08",
     zIndex: 5,
+    fontFamily: "ZenMaru",
     fontSize: 32,
     top: 170,
     letterSpacing: 2.5,
@@ -453,6 +454,7 @@ const styles = StyleSheet.create({
     color: "#533B08",
     letterSpacing: 1.5,
     fontSize: 16,
+    fontFamily: "ZenMaru",
   },
   card: {
     width: "75%",
@@ -469,6 +471,7 @@ const styles = StyleSheet.create({
   cardText: {
     fontSize: 18,
     color: "#533B08",
+    fontFamily: "ZenMaru",
   },
   button: {
     marginTop: 30,
@@ -486,6 +489,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 16,
+    fontFamily: "ZenMaru",
     textAlign: "center",
   },
   buttonTextDisabled: {

@@ -6,7 +6,7 @@ import "react-native-reanimated";
 
 export default function RootLayout() {
   const [loaded] = useFonts({
-    ZenMaru: require("../assets/fonts/ZenMaruGothic-Regular.ttf"),
+    ZenMaru: require("../assets/fonts/ZenMaruGothic-Medium.ttf"),
   });
 
   if (!loaded) return null;

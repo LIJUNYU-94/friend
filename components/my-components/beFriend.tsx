@@ -217,6 +217,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#5B3A00",
     marginBottom: 20,
+    fontFamily: "ZenMaru",
     letterSpacing: 1.3,
   },
   stepBox: {
@@ -231,12 +232,14 @@ const styles = StyleSheet.create({
     letterSpacing: 1.1,
     fontSize: 16,
     fontWeight: "bold",
+    fontFamily: "ZenMaru",
     color: "#0047B2",
     marginTop: 8,
     marginBottom: 12,
   },
   stepText: {
     fontSize: 16,
+    fontFamily: "ZenMaru",
     color: "#5B3A00",
     textAlign: "center",
   },
@@ -254,6 +257,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 18,
     marginHorizontal: 3,
+    fontFamily: "ZenMaru",
   },
   friendButton: {
     borderColor: "#7A4E00",
@@ -276,6 +280,7 @@ const styles = StyleSheet.create({
   friendButtonText: {
     fontSize: 16,
     color: "#7A4E00",
+    fontFamily: "ZenMaru",
     letterSpacing: 1.5,
   },
 });

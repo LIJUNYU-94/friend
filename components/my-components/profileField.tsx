@@ -29,11 +29,13 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 10,
     color: "#80590C",
+    fontFamily: "ZenMaru",
 
     padding: 4,
   },
   content: {
     fontSize: 20,
+    fontFamily: "ZenMaru",
     marginLeft: 35,
     flexDirection: "row",
     alignItems: "center",

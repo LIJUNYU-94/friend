@@ -78,6 +78,7 @@ export default function WaitingCheckScreen() {
                 color: "white",
                 fontWeight: "bold",
                 fontSize: 16,
+                fontFamily: "ZenMaru",
                 textAlign: "center",
               }}
             >
@@ -112,20 +113,24 @@ const styles = StyleSheet.create({
   percentText: {
     fontSize: 14,
     marginBottom: 20,
+    fontFamily: "ZenMaru",
     color: "#333",
   },
   mainText: {
     fontSize: 18,
     color: "#7B4600",
+    fontFamily: "ZenMaru",
     marginBottom: 8,
   },
   subText: {
     fontSize: 16,
+    fontFamily: "ZenMaru",
     color: "#7B4600",
   },
   statusLabel: {
     marginTop: 20,
     fontSize: 14,
     color: "#666",
+    fontFamily: "ZenMaru",
   },
 });

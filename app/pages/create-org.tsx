@@ -204,6 +204,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
+    fontFamily: "ZenMaru",
     textAlign: "center",
     marginBottom: 40,
     color: "#533B08",
@@ -218,6 +219,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     fontSize: 14,
     color: "#80590c",
+    fontFamily: "ZenMaru",
   },
   categoryButtons: {
     alignSelf: "center",
@@ -271,5 +273,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 20,
     fontWeight: 500,
+    fontFamily: "ZenMaru",
   },
 });

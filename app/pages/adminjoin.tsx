@@ -59,6 +59,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
+    fontFamily: "ZenMaru",
     color: "#5C3900",
     fontWeight: "bold",
     textAlign: "center",
@@ -73,6 +74,7 @@ const styles = StyleSheet.create({
   text: {
     color: "#5C3900",
     fontSize: 14,
+    fontFamily: "ZenMaru",
     lineHeight: 22,
   },
   danger: {

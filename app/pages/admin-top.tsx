@@ -312,7 +312,9 @@ export default function AdminTop({ userIcon, role, userName, orgId }: Props) {
     return (
       <View>
         <Pressable onPress={() => setOpen(!open)}>
-          <Text style={{ fontSize: 16, textAlign: "center" }}>
+          <Text
+            style={{ fontSize: 16, textAlign: "center", fontFamily: "ZenMaru" }}
+          >
             並び順：
             {sortOptions.find((o) => o.value === sortOrder)?.label ?? "未選択"}▼
           </Text>
@@ -334,7 +336,9 @@ export default function AdminTop({ userIcon, role, userName, orgId }: Props) {
                 onPress={() => handleSelect(opt.value)}
                 style={{ padding: 10 }}
               >
-                <Text style={{ fontSize: 15 }}>{opt.label}</Text>
+                <Text style={{ fontSize: 15, fontFamily: "ZenMaru" }}>
+                  {opt.label}
+                </Text>
               </Pressable>
             ))}
           </View>
@@ -407,7 +411,7 @@ export default function AdminTop({ userIcon, role, userName, orgId }: Props) {
             <Text style={[styles.mark, { left: 10 }]}>
               {
                 <TouchableOpacity onPress={() => toggleStar(item.id)}>
-                  <Text style={{ fontSize: 18 }}>
+                  <Text style={{ fontSize: 18, fontFamily: "ZenMaru" }}>
                     {didIStar(item.id) ? (
                       <Image
                         source={require("../../assets/images/stared.png")}
@@ -568,7 +572,15 @@ export default function AdminTop({ userIcon, role, userName, orgId }: Props) {
               </View>
             </View>
             <View style={{ alignSelf: "center", marginLeft: 20 }}>
-              <Text style={{ color: "#80590C", fontSize: 16 }}>もっと見る</Text>
+              <Text
+                style={{
+                  color: "#80590C",
+                  fontSize: 16,
+                  fontFamily: "ZenMaru",
+                }}
+              >
+                もっと見る
+              </Text>
             </View>
             <AntDesign name="right" size={16} color="#80590C" />
           </TouchableOpacity>
@@ -655,6 +667,7 @@ const styles = StyleSheet.create({
     paddingLeft: 30,
     marginBottom: 35,
     color: "black",
+    fontFamily: "ZenMaru",
   },
   row1: {
     flexDirection: "row",
@@ -707,7 +720,13 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#80590C",
   },
-  email: { fontSize: 14, color: "#555", letterSpacing: 1, marginVertical: 2 },
+  email: {
+    fontSize: 14,
+    color: "#555",
+    letterSpacing: 1,
+    marginVertical: 2,
+    // fontFamily: "ZenMaru",
+  },
   progress: { fontSize: 14, marginTop: 2 },
   mark: {
     position: "absolute",
@@ -728,10 +747,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     width: "85%",
     alignSelf: "center",
+    fontFamily: "ZenMaru",
     backgroundColor: "#FFFFFF",
     borderRadius: 28.5,
   },
-  article: { fontSize: 16, color: "#80590C", lineHeight: 20 },
+  article: {
+    fontSize: 16,
+    color: "#80590C",
+    lineHeight: 20,
+    fontFamily: "ZenMaru",
+  },
   header: {
     marginVertical: 20,
     width: "80%",

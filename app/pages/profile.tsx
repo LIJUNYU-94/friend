@@ -81,12 +81,28 @@ export default function ProfilePage() {
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // useEffect(() => {
+  //   const fetchProgress = async () => {
+  //     const data = await getCollectionProgress(
+  //       orgId as string,
+  //       myEmail as string
+  //     );
+  //     setCategories(data);
+  //     setLoading(false);
+  //   };
+
+  //   fetchProgress();
+  // }, [orgId, myEmail]);
   useEffect(() => {
     const fetchProgress = async () => {
-      const data = await getCollectionProgress(
-        orgId as string,
-        myEmail as string
-      );
+      const targetEmail =
+        typeof email === "string"
+          ? email
+          : Array.isArray(email)
+          ? email[0]
+          : "";
+
+      const data = await getCollectionProgress(orgId as string, targetEmail);
       setCategories(data);
       setLoading(false);
     };
@@ -479,6 +495,7 @@ export default function ProfilePage() {
                                 <Text
                                   style={{
                                     fontSize: 16,
+                                    fontFamily: "ZenMaru",
                                     color: "#80590C",
                                     textAlign: "center",
                                     position: "absolute",
@@ -494,6 +511,7 @@ export default function ProfilePage() {
                                     color: "#80590C",
                                     marginTop: 8,
                                     fontSize: 16,
+                                    fontFamily: "ZenMaru",
                                     textAlign: "center",
                                   }}
                                 >
@@ -522,7 +540,7 @@ export default function ProfilePage() {
                     </View>
                   )}
 
-                  {user?.myonephrase?.trim() !== "" && (
+                  {user?.myonephrase && user.myonephrase.trim() !== "" && (
                     <View style={{ marginBottom: 12 }}>
                       <Text style={[styles.label, { marginVertical: 12 }]}>
                         ひとこと
@@ -537,6 +555,7 @@ export default function ProfilePage() {
                           color: "#80590C",
                           fontSize: 20,
                           letterSpacing: 1,
+                          fontFamily: "ZenMaru",
                         }}
                       >
                         {user?.myonephrase}
@@ -544,35 +563,36 @@ export default function ProfilePage() {
                     </View>
                   )}
 
-                  {role == "member" && (
-                    <TouchableOpacity
-                      style={{
-                        alignSelf: "center",
-                        borderRadius: 29,
-                        width: 200,
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        paddingVertical: 5,
-                        backgroundColor: "#D9D9D9",
-                        marginVertical: 30,
-                      }}
-                      onPress={handlePress}
-                    >
-                      <Text
-                        style={[
-                          styles.label,
-                          {
-                            textAlign: "center",
-                            alignItems: "center",
-                            color: "black",
-                          },
-                        ]}
+                  {role == "member" &&
+                    (isMyProfile || relation !== "connected") && (
+                      <TouchableOpacity
+                        style={{
+                          alignSelf: "center",
+                          borderRadius: 29,
+                          width: 200,
+                          flexDirection: "row",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          paddingVertical: 5,
+                          backgroundColor: "#D9D9D9",
+                          marginVertical: 30,
+                        }}
+                        onPress={handlePress}
                       >
-                        {isMyProfile ? "プロフィール編集" : "友達になる"}
-                      </Text>
-                    </TouchableOpacity>
-                  )}
+                        <Text
+                          style={[
+                            styles.label,
+                            {
+                              textAlign: "center",
+                              alignItems: "center",
+                              color: "black",
+                            },
+                          ]}
+                        >
+                          {isMyProfile ? "プロフィール編集" : "友達になる"}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
                 </>
               ) : (
                 <View>
@@ -580,6 +600,7 @@ export default function ProfilePage() {
                     style={{
                       fontSize: 18,
                       textAlign: "center",
+                      fontFamily: "ZenMaru",
                       color: "#6A4402",
                       letterSpacing: 1.5,
                     }}
@@ -595,6 +616,7 @@ export default function ProfilePage() {
                     style={{
                       fontSize: 18,
                       textAlign: "center",
+                      fontFamily: "ZenMaru",
                       color: "#6A4402",
                       letterSpacing: 1.5,
                     }}
@@ -665,6 +687,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     color: "#80590C",
+    fontFamily: "ZenMaru",
     letterSpacing: 1.5,
     lineHeight: 24,
   },
@@ -672,11 +695,13 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "semibold",
     color: "#80590C",
+    fontFamily: "ZenMaru",
     marginBottom: 10,
   },
   mbti: {
     fontSize: 18,
     color: "#80590C",
+    fontFamily: "ZenMaru",
   },
   details: {
     marginBottom: 20,
@@ -684,6 +709,7 @@ const styles = StyleSheet.create({
   detailItem: {
     fontSize: 14,
     color: "#80590C",
+    fontFamily: "ZenMaru",
     marginVertical: 2,
   },
   hobbySection: {
@@ -712,6 +738,7 @@ const styles = StyleSheet.create({
   favTitle: {
     fontSize: 16,
     fontWeight: "bold",
+    fontFamily: "ZenMaru",
     marginBottom: 10,
     color: "#7B5531",
   },
@@ -731,6 +758,7 @@ const styles = StyleSheet.create({
   },
   profileText: {
     fontSize: 20,
+    fontFamily: "ZenMaru",
     color: "#6A4402",
     letterSpacing: 1.5,
   },

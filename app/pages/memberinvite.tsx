@@ -165,6 +165,7 @@ const styles = StyleSheet.create({
   title: {
     textAlign: "center",
     fontSize: 20,
+    fontFamily: "ZenMaru",
     marginBottom: 20,
     color: "#80590C",
     fontWeight: "600",
@@ -192,6 +193,7 @@ const styles = StyleSheet.create({
   domainText: {
     marginLeft: 10,
     fontSize: 16,
+    fontFamily: "ZenMaru",
     color: "#80590C",
   },
   addButton: {
@@ -206,6 +208,7 @@ const styles = StyleSheet.create({
   addButtonText: {
     fontSize: 16,
     lineHeight: 20,
+    fontFamily: "ZenMaru",
     color: "rgba(0,0, 0, 0.3)",
   },
   note: {
@@ -233,6 +236,7 @@ const styles = StyleSheet.create({
   nextButtonText: {
     color: "#fff",
     fontSize: 18,
+    fontFamily: "ZenMaru",
     fontWeight: "bold",
   },
 });

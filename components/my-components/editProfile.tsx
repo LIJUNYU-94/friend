@@ -237,16 +237,17 @@ const EditProfile: React.FC<EditProfileProps> = ({
     console.log(filteredKnowmore);
 
     const onePhrase = userOnePhrase.trim();
-
+    const dataToUpdate: { [key: string]: any } = {};
+    if (Object.keys(filteredFavorites).length > 0)
+      dataToUpdate.myFavorites = filteredFavorites;
+    if (Object.keys(filteredIf).length > 0) dataToUpdate.myIf = filteredIf;
+    if (Object.keys(filteredBest3).length > 0)
+      dataToUpdate.myBest3 = filteredBest3;
+    if (filteredKnowmore.length > 0) dataToUpdate.myKnowmore = filteredKnowmore;
+    if (onePhrase !== "") dataToUpdate.myonephrase = onePhrase;
     await setDoc(
       doc(db, "orgs", orgIdStr, "members", now.email),
-      {
-        myFavorites: filteredFavorites,
-        myIf: filteredIf,
-        myBest3: filteredBest3,
-        myKnowmore: filteredKnowmore,
-        myonephrase: onePhrase,
-      },
+      dataToUpdate,
       { merge: true }
     );
 
@@ -255,7 +256,6 @@ const EditProfile: React.FC<EditProfileProps> = ({
       myIf: filteredIf,
       myBest3: filteredBest3,
       myKnowmore: filteredKnowmore,
-
       myonephrase: onePhrase,
     });
   };
@@ -628,6 +628,7 @@ const EditProfile: React.FC<EditProfileProps> = ({
             marginLeft: 40,
             paddingVertical: 5,
             paddingHorizontal: 20,
+            fontFamily: "ZenMaru",
             borderColor: "#002AB3",
             borderWidth: 2,
             borderRadius: 20,
@@ -964,7 +965,7 @@ const EditProfile: React.FC<EditProfileProps> = ({
                     </>
                   )}
 
-                  {item.id === "myonephrase" && (
+                  {item.id === "myonephrase" && userOnePhrase.trim() !== "" && (
                     <View style={{ marginTop: 8 }}>
                       {/* <Text style={{ marginBottom: 4, fontWeight: "bold" }}>
                       ひとこと

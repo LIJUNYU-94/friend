@@ -156,6 +156,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
+    fontFamily: "ZenMaru",
     fontWeight: "bold",
     color: "#7c4b00",
     marginBottom: 24,
@@ -163,12 +164,14 @@ const styles = StyleSheet.create({
   },
   description: {
     color: "#7c4b00",
+    fontFamily: "ZenMaru",
     fontSize: 14,
     marginLeft: 30,
     marginBottom: 3,
   },
   label: {
     fontSize: 16,
+    fontFamily: "ZenMaru",
     color: "#80590C",
     letterSpacing: 1.5,
     lineHeight: 24,
@@ -179,6 +182,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     marginBottom: 16,
     fontSize: 16,
+    fontFamily: "ZenMaru",
   },
   editable: {
     color: "blue",
@@ -196,5 +200,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
+    fontFamily: "ZenMaru",
   },
 });

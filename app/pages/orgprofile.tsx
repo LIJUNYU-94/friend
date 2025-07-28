@@ -224,6 +224,7 @@ const styles = StyleSheet.create({
   pageTitle: {
     color: "#aaa",
     margin: 8,
+    fontFamily: "ZenMaru",
     fontSize: 14,
   },
   image: {
@@ -239,11 +240,13 @@ const styles = StyleSheet.create({
   sectionTitle: {
     color: "#80590C",
     fontSize: 14,
+    fontFamily: "ZenMaru",
     marginBottom: 4,
   },
   orgName: {
     fontSize: 20,
     width: "100%",
+    fontFamily: "ZenMaru",
     textAlign: "center",
     color: "#80590C",
     marginBottom: 24,
@@ -251,6 +254,7 @@ const styles = StyleSheet.create({
   },
   contentText: {
     fontSize: 20,
+    fontFamily: "ZenMaru",
     color: "#80590C",
   },
   messageBox: {
@@ -261,11 +265,13 @@ const styles = StyleSheet.create({
   },
   messageLabel: {
     fontSize: 10,
+    fontFamily: "ZenMaru",
     color: "#80590C",
     marginBottom: 8,
   },
   messageText: {
     fontSize: 14,
+    fontFamily: "ZenMaru",
     padding: 30,
     color: "#80590C",
     lineHeight: 18.2,

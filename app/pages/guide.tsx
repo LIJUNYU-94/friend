@@ -40,7 +40,12 @@ export default function Guide() {
           <View style={styles.imagecontainer}>
             {step === 0 && (
               <>
-                <Text style={[styles.imagetext, { fontSize: 32, top: 170 }]}>
+                <Text
+                  style={[
+                    styles.imagetext,
+                    { fontSize: 32, top: 170, fontFamily: "ZenMaru" },
+                  ]}
+                >
                   友達コネクションへ{"\n"}ようこそ
                 </Text>
                 <View
@@ -60,7 +65,12 @@ export default function Guide() {
                 <Text
                   style={[
                     styles.imagetext,
-                    { fontSize: 16, bottom: 30, flexShrink: 1 },
+                    {
+                      fontSize: 16,
+                      bottom: 30,
+                      flexShrink: 1,
+                      fontFamily: "ZenMaru",
+                    },
                   ]}
                 >
                   まずは自分のプロフィールを入力しよう
@@ -76,7 +86,7 @@ export default function Guide() {
                 <Text
                   style={[
                     styles.imagetext,
-                    { fontSize: 16, top: 280, left: 30 },
+                    { fontSize: 16, top: 280, left: 30, fontFamily: "ZenMaru" },
                   ]}
                 >
                   顔と名前が覚えられる！
@@ -119,6 +129,7 @@ export default function Guide() {
                     styles.imagetext,
                     {
                       fontSize: 16,
+                      fontFamily: "ZenMaru",
                       bottom: -70,
                       left: 0,
                       width: "100%",
@@ -138,7 +149,12 @@ export default function Guide() {
                 <Text
                   style={[
                     styles.imagetext,
-                    { fontSize: 16, bottom: 197, width: "100%" },
+                    {
+                      fontSize: 16,
+                      bottom: 197,
+                      width: "100%",
+                      fontFamily: "ZenMaru",
+                    },
                   ]}
                 >
                   コネクション状況もわかる！
@@ -162,6 +178,7 @@ export default function Guide() {
                       bottom: 30,
                       flexShrink: 1,
                       alignSelf: "center",
+                      fontFamily: "ZenMaru",
                     },
                   ]}
                 >
@@ -187,6 +204,7 @@ export default function Guide() {
                       fontSize: 16,
                       bottom: 135,
                       width: "100%",
+                      fontFamily: "ZenMaru",
                     },
                   ]}
                 >
@@ -208,6 +226,7 @@ export default function Guide() {
                       bottom: 0,
                       flexShrink: 1,
                       alignSelf: "center",
+                      fontFamily: "ZenMaru",
                     },
                   ]}
                 >
@@ -221,6 +240,7 @@ export default function Guide() {
                       bottom: -30,
                       flexShrink: 1,
                       alignSelf: "center",
+                      fontFamily: "ZenMaru",
                     },
                   ]}
                 >
@@ -242,6 +262,7 @@ export default function Guide() {
                       bottom: 50,
                       left: 0,
                       width: "100%",
+                      fontFamily: "ZenMaru",
                     },
                   ]}
                 >
@@ -294,6 +315,7 @@ const styles = StyleSheet.create({
   },
   skiptext: {
     fontSize: 20,
+    fontFamily: "ZenMaru",
     color: "#B3AEAE",
   },
   imagecontainer: {
@@ -328,5 +350,10 @@ const styles = StyleSheet.create({
     left: "50%",
     transform: [{ translateX: "-50%" }],
   },
-  nexttext: { fontSize: 20, fontWeight: 700, color: "#80590C" },
+  nexttext: {
+    fontSize: 20,
+    fontWeight: 700,
+    color: "#80590C",
+    fontFamily: "ZenMaru",
+  },
 });

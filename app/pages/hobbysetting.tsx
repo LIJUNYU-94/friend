@@ -138,6 +138,7 @@ const styles = StyleSheet.create({
   title: {
     textAlign: "center",
     fontSize: 18,
+    fontFamily: "ZenMaru",
     marginBottom: 20,
     color: "#80590C",
     fontWeight: "bold",
@@ -156,6 +157,7 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 18,
+    fontFamily: "ZenMaru",
     color: "#80590C",
   },
   notice: {
@@ -163,6 +165,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     color: "blue",
     fontSize: 14,
+    fontFamily: "ZenMaru",
   },
   button: {
     backgroundColor: "#0056FF",
@@ -175,6 +178,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "#fff",
     fontSize: 16,
+    fontFamily: "ZenMaru",
     letterSpacing: 2,
   },
   deleteBtn: {
@@ -188,5 +192,6 @@ const styles = StyleSheet.create({
   deleteBtnText: {
     color: "#fff",
     fontSize: 18,
+    fontFamily: "ZenMaru",
   },
 });

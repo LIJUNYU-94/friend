@@ -148,6 +148,7 @@ export default function Menu({
               paddingBottom: 4.5,
               borderRadius: 10,
               borderWidth: 1,
+              fontFamily: "ZenMaru",
               borderColor: "black",
             }}
           >
@@ -375,6 +376,7 @@ const styles = StyleSheet.create({
   },
   profileBtnText: {
     fontSize: 12,
+    fontFamily: "ZenMaru",
     color: "#555",
   },
   closeBtn: {
@@ -387,7 +389,7 @@ const styles = StyleSheet.create({
   /* menu list */
   menu: { paddingHorizontal: 24, paddingBottom: 40, height: 600 },
   item: { paddingVertical: 15 },
-  itemText: { fontSize: 16 },
+  itemText: { fontSize: 16, fontFamily: "ZenMaru" },
   divider: {
     height: 1,
     backgroundColor: "#ddd",
@@ -402,9 +404,9 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 24,
   },
-  orgLabel: { fontSize: 14, marginVertical: 4 },
+  orgLabel: { fontSize: 14, marginVertical: 4, fontFamily: "ZenMaru" },
   orgSelect: { marginTop: 8 },
-  orgSelectText: { fontSize: 16, fontWeight: "600" },
+  orgSelectText: { fontSize: 16, fontWeight: "600", fontFamily: "ZenMaru" },
   modalBackground: {
     flex: 1,
     justifyContent: "center",
